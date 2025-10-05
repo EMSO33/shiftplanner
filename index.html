@@ -6,7 +6,6 @@
   <title>ShiftPilot Dashboard</title>
   <link rel="stylesheet" href="styles.css" />
   <style>
-    /* Dashboard tasarımı */
     body {
       background-color: #f4f6f9;
       font-family: Arial, sans-serif;
@@ -32,11 +31,12 @@
       margin-bottom: 1.5rem;
     }
 
-    /* Buton grubu */
+    /* ✅ Buton grubu düzeni */
     .button-group {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px; /* 🔹 Tüm butonlar arasında eşit aralık */
+      margin-top: 10px;
     }
 
     .button-group button {
@@ -49,29 +49,30 @@
       cursor: pointer;
       transition: background-color 0.3s, transform 0.1s;
       width: 100%;
+      box-sizing: border-box;
     }
 
     .button-group button:hover {
       transform: scale(1.03);
     }
 
-    /* Renk temaları */
+    /* 🔹 Renk temaları */
     #planner-btn {
-      background-color: #0d6efd; /* mavi */
+      background-color: #0d6efd;
     }
     #planner-btn:hover {
       background-color: #0b5ed7;
     }
 
     #calendar-btn {
-      background-color: #20c997; /* yeşil */
+      background-color: #20c997;
     }
     #calendar-btn:hover {
       background-color: #198754;
     }
 
     #stats-btn {
-      background-color: #ffc107; /* sarı */
+      background-color: #ffc107;
       color: #000;
     }
     #stats-btn:hover {
@@ -80,7 +81,7 @@
     }
 
     #logout-btn {
-      background-color: #dc3545; /* kırmızı */
+      background-color: #dc3545;
     }
     #logout-btn:hover {
       background-color: #bb2d3b;
@@ -111,7 +112,6 @@
     const calendarBtn = document.getElementById("calendar-btn");
     const statsBtn = document.getElementById("stats-btn");
 
-    // Kullanıcı oturum kontrolü
     onAuthStateChanged(auth, (user) => {
       if (user) {
         welcomeText.textContent = `Welcome, ${user.email} 👋`;
@@ -120,24 +120,20 @@
       }
     });
 
-    // Çıkış
     logoutBtn.addEventListener("click", async () => {
       await signOut(auth);
       alert("👋 Logged out successfully!");
       window.location.replace("login.html");
     });
 
-    // Planner yönlendirme
     plannerBtn.addEventListener("click", () => {
       window.location.href = "shift.html";
     });
 
-    // Takvim yönlendirme
     calendarBtn.addEventListener("click", () => {
       window.location.href = "shift-calendar.html";
     });
 
-    // İstatistik sayfasına yönlendirme
     statsBtn.addEventListener("click", () => {
       window.location.href = "shift-stats.html";
     });
