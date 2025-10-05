@@ -9,6 +9,12 @@
     body {
       background-color: #f4f6f9;
       font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
     }
 
     .dashboard {
@@ -18,7 +24,6 @@
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
       width: 360px;
       text-align: center;
-      margin: 100px auto;
     }
 
     h1 {
@@ -31,11 +36,11 @@
       margin-bottom: 1.5rem;
     }
 
-    /* ✅ Buton grubu düzeni */
+    /* 🔹 Butonları eşit aralıkla hizala */
     .button-group {
-      display: flex;
-      flex-direction: column;
-      gap: 10px; /* 🔹 Tüm butonlar arasında eşit aralık */
+      display: grid;
+      grid-template-columns: 1fr;
+      row-gap: 10px; /* 🔥 Tüm butonlar arasında eşit aralık */
       margin-top: 10px;
     }
 
@@ -56,7 +61,7 @@
       transform: scale(1.03);
     }
 
-    /* 🔹 Renk temaları */
+    /* 🔸 Renk temaları */
     #planner-btn {
       background-color: #0d6efd;
     }
