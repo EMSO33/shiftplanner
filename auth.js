@@ -10,13 +10,20 @@ import {
 const registerBtn = document.getElementById("register-btn");
 if (registerBtn) {
   registerBtn.addEventListener("click", async () => {
-    const email = document.getElementById("register-email").value;
-    const password = document.getElementById("register-password").value;
+    const email = document.getElementById("register-email").value.trim();
+    const password = document.getElementById("register-password").value.trim();
+
+    if (!email || !password) {
+      alert("⚠️ Please fill in both fields.");
+      return;
+    }
 
     try {
       await createUserWithEmailAndPassword(auth, email, password);
-      alert("✅ Account created successfully!");
-      window.location.href = "login.html";
+      alert("✅ Account created successfully! Redirecting...");
+      setTimeout(() => {
+        window.location.replace("login.html");
+      }, 800);
     } catch (error) {
       alert("❌ " + error.message);
     }
@@ -27,13 +34,20 @@ if (registerBtn) {
 const loginBtn = document.getElementById("login-btn");
 if (loginBtn) {
   loginBtn.addEventListener("click", async () => {
-    const email = document.getElementById("login-email").value;
-    const password = document.getElementById("login-password").value;
+    const email = document.getElementById("login-email").value.trim();
+    const password = document.getElementById("login-password").value.trim();
+
+    if (!email || !password) {
+      alert("⚠️ Please enter your email and password.");
+      return;
+    }
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      alert("✅ Logged in successfully!");
-      window.location.href = "index.html";
+      alert("✅ Logged in successfully! Redirecting...");
+      setTimeout(() => {
+        window.location.replace("index.html");
+      }, 800);
     } catch (error) {
       alert("❌ " + error.message);
     }
@@ -45,12 +59,14 @@ const logoutBtn = document.getElementById("logout-btn");
 if (logoutBtn) {
   logoutBtn.addEventListener("click", async () => {
     await signOut(auth);
-    alert("👋 Logged out");
-    window.location.href = "login.html";
+    alert("👋 Logged out successfully!");
+    setTimeout(() => {
+      window.location.replace("login.html");
+    }, 500);
   });
 }
 
-// AUTH STATE LISTENER
+// AUTH STATE LISTENER (Optional: to track login status)
 onAuthStateChanged(auth, (user) => {
   if (user) {
     console.log("User logged in:", user.email);
