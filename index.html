@@ -6,27 +6,84 @@
   <title>ShiftPilot Dashboard</title>
   <link rel="stylesheet" href="styles.css" />
   <style>
-    /* Buton grubunu dikey hizala */
+    /* Dashboard tasarımı */
+    body {
+      background-color: #f4f6f9;
+      font-family: Arial, sans-serif;
+    }
+
+    .dashboard {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      width: 360px;
+      text-align: center;
+      margin: 100px auto;
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 1rem;
+    }
+
+    #welcome-text {
+      color: #666;
+      margin-bottom: 1.5rem;
+    }
+
+    /* Buton grubu */
     .button-group {
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      margin-top: 20px;
+      gap: 12px;
     }
 
     .button-group button {
-      background-color: #007bff;
-      color: white;
+      color: #fff;
       border: none;
-      padding: 10px 14px;
-      border-radius: 6px;
-      cursor: pointer;
+      border-radius: 8px;
+      padding: 12px;
       font-size: 1rem;
-      transition: background-color 0.3s;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.1s;
+      width: 100%;
     }
 
     .button-group button:hover {
-      background-color: #0056b3;
+      transform: scale(1.03);
+    }
+
+    /* Renk temaları */
+    #planner-btn {
+      background-color: #0d6efd; /* mavi */
+    }
+    #planner-btn:hover {
+      background-color: #0b5ed7;
+    }
+
+    #calendar-btn {
+      background-color: #20c997; /* yeşil */
+    }
+    #calendar-btn:hover {
+      background-color: #198754;
+    }
+
+    #stats-btn {
+      background-color: #ffc107; /* sarı */
+      color: #000;
+    }
+    #stats-btn:hover {
+      background-color: #e0a800;
+      color: #000;
+    }
+
+    #logout-btn {
+      background-color: #dc3545; /* kırmızı */
+    }
+    #logout-btn:hover {
+      background-color: #bb2d3b;
     }
   </style>
 </head>
@@ -35,7 +92,6 @@
     <h1>ShiftPilot Dashboard</h1>
     <p id="welcome-text">Loading user info...</p>
 
-    <!-- 🔹 Dashboard Butonları -->
     <div class="button-group">
       <button id="planner-btn">🗓️ Go to Shift Planner</button>
       <button id="calendar-btn">📅 View Calendar</button>
@@ -55,7 +111,7 @@
     const calendarBtn = document.getElementById("calendar-btn");
     const statsBtn = document.getElementById("stats-btn");
 
-    // 🔐 Kullanıcı oturum kontrolü
+    // Kullanıcı oturum kontrolü
     onAuthStateChanged(auth, (user) => {
       if (user) {
         welcomeText.textContent = `Welcome, ${user.email} 👋`;
@@ -64,24 +120,24 @@
       }
     });
 
-    // 🚪 Logout
+    // Çıkış
     logoutBtn.addEventListener("click", async () => {
       await signOut(auth);
       alert("👋 Logged out successfully!");
       window.location.replace("login.html");
     });
 
-    // 🗓️ Shift Planner yönlendirme
+    // Planner yönlendirme
     plannerBtn.addEventListener("click", () => {
       window.location.href = "shift.html";
     });
 
-    // 📅 Takvim yönlendirme
+    // Takvim yönlendirme
     calendarBtn.addEventListener("click", () => {
       window.location.href = "shift-calendar.html";
     });
 
-    // 📊 İstatistik sayfasına yönlendirme
+    // İstatistik sayfasına yönlendirme
     statsBtn.addEventListener("click", () => {
       window.location.href = "shift-stats.html";
     });
