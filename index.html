@@ -5,6 +5,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ShiftPilot Dashboard</title>
   <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* Buton grubunu dikey hizala */
+    .button-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .button-group button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background-color 0.3s;
+    }
+
+    .button-group button:hover {
+      background-color: #0056b3;
+    }
+  </style>
 </head>
 <body>
   <div class="dashboard">
@@ -16,7 +40,7 @@
       <button id="planner-btn">🗓️ Go to Shift Planner</button>
       <button id="calendar-btn">📅 View Calendar</button>
       <button id="stats-btn">📊 View Stats</button>
-      <button id="logout-btn">Logout</button>
+      <button id="logout-btn">🚪 Logout</button>
     </div>
   </div>
 
