@@ -107,3 +107,29 @@ body {
     padding: 1.5rem;
   }
 }
+.shift-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 1.5rem;
+}
+
+.shift-form input,
+.shift-form select {
+  padding: 0.6rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+#shift-list {
+  text-align: left;
+  padding-left: 0;
+  list-style: none;
+}
+
+#shift-list li {
+  background: #f8f9fa;
+  margin-bottom: 6px;
+  padding: 8px 10px;
+  border-radius: 6px;
+}

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ShiftPilot - My Shifts</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="dashboard">
+    <h1>Shift Planner</h1>
+
+    <div class="shift-form">
+      <input type="date" id="shift-date" />
+      <select id="shift-type">
+        <option value="Morning">Morning</option>
+        <option value="Evening">Evening</option>
+        <option value="Night">Night</option>
+      </select>
+      <input type="text" id="shift-note" placeholder="Note (optional)" />
+      <button id="add-shift">Add Shift</button>
+    </div>
+
+    <h3>My Shifts</h3>
+    <ul id="shift-list"></ul>
+
+    <button id="logout-btn">Logout</button>
+  </div>
+
+  <script type="module" src="firebase.js"></script>
+  <script type="module" src="shift.js"></script>
+</body>
+</html>
