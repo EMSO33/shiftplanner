@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shift Stats - ShiftPilot</title>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body {
+      background-color: #f4f6f9;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .stats-box {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      width: 400px;
+      margin: 20px auto;
+    }
+
+    canvas {
+      margin-top: 20px;
+    }
+
+    #back-btn {
+      display: block;
+      margin: 20px auto;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    #back-btn:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <h1>📊 My Shift Statistics</h1>
+
+  <div class="stats-box">
+    <p id="total">Loading...</p>
+    <canvas id="shiftChart" width="350" height="350"></canvas>
+  </div>
+
+  <button id="back-btn">⬅️ Back to Planner</button>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyARlOXg2YuKrEsRWARCUTiabHoMN1hO3Ks",
+      authDomain: "shiftpilot-b3c1d.firebaseapp.com",
+      projectId: "shiftpilot-b3c1d",
+      storageBucket: "shiftpilot-b3c1d.firebasestorage.app",
+      messagingSenderId: "676810685497",
+      appId: "1:676810685497:web:db3162bc7a394442caa1e8",
+      measurementId: "G-BEJ85FBSCZ"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    const totalEl = document.getElementById("total");
+    const ctx = document.getElementById("shiftChart").getContext("2d");
+    const backBtn = document.getElementById("back-btn");
+
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      const snapshot = await db.collection("shifts").where("uid", "==", user.uid).get();
+      const shifts = snapshot.docs.map(doc => doc.data());
+
+      const total = shifts.length;
+      const morning = shifts.filter(s => s.type === "Morning").length;
+      const evening = shifts.filter(s => s.type === "Evening").length;
+      const night = shifts.filter(s => s.type === "Night").length;
+
+      totalEl.textContent = `You have ${total} total shifts`;
+
+      new Chart(ctx, {
+        type: "pie",
+        data: {
+          labels: ["Morning", "Evening", "Night"],
+          datasets: [{
+            label: "Shift Distribution",
+            data: [morning, evening, night],
+            backgroundColor: ["#198754", "#ffc107", "#0d6efd"]
+          }]
+        },
+        options: {
+          plugins: {
+            legend: { position: "bottom" },
+            title: { display: true, text: "Shift Type Breakdown" }
+          }
+        }
+      });
+    });
+
+    backBtn.addEventListener("click", () => {
+      window.location.href = "shift.html";
+    });
+  </script>
+</body>
+</html>
