@@ -4,8 +4,21 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Shift Calendar - ShiftPilot</title>
-  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.9/index.global.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.9/index.global.min.css" rel="stylesheet" />
+  <style>
+    #calendar {
+      max-width: 100%;
+      margin: 20px auto;
+      background: white;
+      border-radius: 12px;
+      padding: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    body {
+      background: #f4f6f9;
+    }
+  </style>
 </head>
 <body>
   <div class="dashboard">
@@ -14,22 +27,22 @@
     <button id="back-btn">⬅️ Back to Planner</button>
   </div>
 
+  <!-- 🔹 Firebase ve FullCalendar script'leri -->
   <script type="module">
     import { auth, db } from "./firebase.js";
     import {
-      onAuthStateChanged, signOut
+      onAuthStateChanged
     } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
     import {
       collection, query, where, getDocs, addDoc
     } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
-
     import { Calendar } from "https://cdn.jsdelivr.net/npm/fullcalendar@6.1.9/index.global.min.js";
 
     const calendarEl = document.getElementById("calendar");
     const backBtn = document.getElementById("back-btn");
-
     let currentUser = null;
 
+    // 🔐 Kullanıcı oturum kontrolü
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         currentUser = user;
@@ -53,6 +66,7 @@
         });
       });
 
+      // 🗓️ FullCalendar başlat
       const calendar = new Calendar(calendarEl, {
         initialView: "dayGridMonth",
         height: 650,
@@ -80,6 +94,7 @@
       calendar.render();
     }
 
+    // 🔙 Planner sayfasına dönüş
     backBtn.addEventListener("click", () => {
       window.location.href = "shift.html";
     });
