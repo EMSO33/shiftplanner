@@ -1,1 +1,24 @@
-﻿body{font-family:Arial,Helvetica,sans-serif;background:#f4f6f8;color:#222;padding:20px}
+﻿.dashboard {
+    max-width: 400px;
+    margin: 100px auto;
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    text-align: center;
+  }
+  
+  #logout-btn {
+    margin-top: 1rem;
+    padding: 0.7rem 1rem;
+    border: none;
+    background: #d9534f;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  
+  #logout-btn:hover {
+    background: #c9302c;
+  }
+  

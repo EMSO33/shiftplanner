@@ -1,5 +1,42 @@
-﻿<!doctype html>
-<html lang='en'>
-<head><meta charset='utf-8'/><title>ShiftPilot â€” Prototype</title></head>
-<body><h1>ShiftPilot (Prototype)</h1><p>It works! ðŸš€</p></body>
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ShiftPilot Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="dashboard">
+    <h1>ShiftPilot Dashboard</h1>
+    <p id="welcome-text">Loading user info...</p>
+    <button id="logout-btn">Logout</button>
+  </div>
+
+  <script type="module" src="firebase.js"></script>
+  <script type="module">
+    import { auth } from "./firebase.js";
+    import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
+
+    const welcomeText = document.getElementById("welcome-text");
+    const logoutBtn = document.getElementById("logout-btn");
+
+    // Kullanıcı oturum durumunu dinle
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        welcomeText.textContent = `Welcome, ${user.email} 👋`;
+      } else {
+        // Oturum yoksa login sayfasına yönlendir
+        window.location.replace("login.html");
+      }
+    });
+
+    // Çıkış butonu
+    logoutBtn.addEventListener("click", async () => {
+      await signOut(auth);
+      alert("👋 Logged out successfully!");
+      window.location.replace("login.html");
+    });
+  </script>
+</body>
 </html>
