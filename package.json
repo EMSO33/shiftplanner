@@ -1,0 +1,6 @@
+﻿{
+  "name": "shiftpilot",
+  "version": "1.0.0",
+  "scripts": { "start": "npx serve .", "build": "echo 'Static build'" },
+  "dependencies": { "serve": "^14.2.0" }
+}
