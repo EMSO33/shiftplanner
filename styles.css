@@ -127,12 +127,13 @@ body {
   text-align: left;
   padding-left: 0;
   list-style: none;
-  width: 100%;          /* 👉 kart genişliğini doldursun */
-  max-height: 300px;    /* 👉 çok olursa kutu içinde kaydır */
+  width: 100%;
+  max-height: 300px;
   overflow-y: auto;
   margin: 0;
 }
 
+/* ✅ Shift List Eleman Düzeni */
 #shift-list li {
   background: #f8f9fa;
   margin-bottom: 8px;
@@ -141,7 +142,16 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  word-wrap: break-word; /* uzun notları kır */
+  gap: 8px;
+  flex-wrap: nowrap; /* ❗ Taşma olmasın */
+}
+
+#shift-list li > span {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-right: 8px;
 }
 
 /* ✏️ Edit & 🗑️ Delete Butonları */
@@ -154,6 +164,7 @@ body {
   border-radius: 4px;
   cursor: pointer;
   transition: transform 0.1s ease-in;
+  flex-shrink: 0; /* Butonlar küçülmesin */
 }
 
 .edit-btn { background: #ffc107; color: #000; }
@@ -197,11 +208,17 @@ body {
     flex-direction: column;
     align-items: flex-start;
     gap: 6px;
+    flex-wrap: wrap; /* dar alanda alt satıra geçsin */
+  }
+
+  #shift-list li > span {
+    white-space: normal;
   }
 
   .edit-btn,
   .delete-btn {
-    width: 100%;
+    width: 48%;
+    margin-top: 4px;
   }
 
   .button-group button {
