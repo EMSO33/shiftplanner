@@ -266,3 +266,62 @@ body {
     font-size: 0.95rem;
   }
 }
+/* 🛠 Edit Shift modal form alanları taşmasın */
+.fc-popover .fc-popover-body {
+  overflow-x: hidden !important; /* yatay taşmayı kes */
+}
+
+.fc-popover input[type="date"],
+.fc-popover input[type="text"],
+.fc-popover input[type="email"],
+.fc-popover input[type="number"],
+.fc-popover select,
+.fc-popover textarea,
+#event-modal input,
+#event-modal select,
+#event-modal textarea,
+.event-modal input,
+.event-modal select,
+.event-modal textarea {
+  display: block;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  margin: 6px 0;
+}
+
+/* Etiket + alan dikey yığılma ve eşit boşluk */
+.fc-popover .form-row,
+#event-modal .form-row,
+.event-modal .form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Başlıklar/etiketler satır kırmasın diye */
+.fc-popover label,
+#event-modal label,
+.event-modal label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 4px;
+  white-space: normal;
+  word-break: break-word;
+}
+
+/* Modal içi butonlar hizalı ve taşmadan sığsın */
+.fc-popover .modal-actions,
+#event-modal .modal-actions,
+.event-modal .modal-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.fc-popover .modal-actions button,
+#event-modal .modal-actions button,
+.event-modal .modal-actions button {
+  flex: 1 1 120px; /* dar alanda kırılabilsin */
+}
