@@ -128,16 +128,11 @@ body {
   padding-left: 0;
   list-style: none;
   width: 100%;
-  max-height: 400px;              /* ✅ scroll aktif */
-  overflow-y: auto;               /* ✅ kaydırma */
-  overflow-x: hidden;
+  max-height: 300px;
+  overflow-y: auto;
   margin: 0;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  background: #fff;
 }
 
-/* ✅ Shift List Eleman Düzeni */
 #shift-list li {
   background: #f8f9fa;
   margin-bottom: 8px;
@@ -145,20 +140,17 @@ body {
   border-radius: 6px;
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   gap: 8px;
-  flex-wrap: wrap;                /* ✅ taşma engeli */
-  word-break: break-word;
-  white-space: normal;            /* ✅ 3 nokta yok */
+  flex-wrap: nowrap;
 }
 
-/* 🧩 Shift metinleri tam görünür */
 #shift-list li > span {
-  flex: 1 1 100%;
-  white-space: normal;
-  overflow: visible;
-  text-overflow: unset;
-  line-height: 1.4;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-right: 8px;
 }
 
 /* ✏️ Edit & 🗑️ Delete Butonları */
@@ -180,7 +172,7 @@ body {
 .edit-btn:hover,
 .delete-btn:hover { transform: scale(1.05); }
 
-/* 🗓️ FullCalendar kapsayıcıları (takvim sayfası) */
+/* 🗓️ FullCalendar kapsayıcıları */
 #calendar {
   max-width: 100%;
   margin: 20px auto;
@@ -203,7 +195,7 @@ body {
 
 #back-btn:hover { background-color: #0056b3; }
 
-/* 🪟 FullCalendar Event Modal Fix (taşma düzeltme) */
+/* 🪟 FullCalendar Event Modal */
 .fc-popover {
   position: fixed !important;
   top: 50% !important;
@@ -218,30 +210,49 @@ body {
   overflow: hidden !important;
 }
 
-/* Başlık kısmı */
-.fc-popover .fc-header-toolbar,
-.fc-popover .fc-popover-header {
-  background: #0d6efd !important;
-  color: white !important;
-  padding: 10px !important;
-  font-weight: bold;
-  text-align: center;
-}
-
-/* İçerik alanı */
 .fc-popover .fc-popover-body {
   padding: 15px !important;
   max-height: 300px !important;
   overflow-y: auto !important;
   font-size: 0.95rem;
+  overflow-x: hidden !important;
 }
 
-/* 📱 Mobilde modal görünümü */
-@media (max-width: 480px) {
-  .fc-popover {
-    width: 90% !important;
-    max-height: 85vh !important;
-  }
+/* 🧩 Modal input alanları */
+.fc-popover input,
+.fc-popover select,
+.fc-popover textarea,
+#event-modal input,
+#event-modal select,
+#event-modal textarea {
+  display: block;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 8px 5px;   /* ✅ taşma önlendi */
+  margin: 6px 0 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+/* Etiketler */
+.fc-popover label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+/* Modal butonları */
+.fc-popover .modal-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.fc-popover .modal-actions button {
+  flex: 1 1 120px;
 }
 
 /* 📱 Mobil Uyumluluk */
@@ -272,85 +283,9 @@ body {
   .button-group button {
     font-size: 0.95rem;
   }
-}
 
-/* 🛠 Edit Shift modal form alanları taşmasın */
-.fc-popover .fc-popover-body {
-  overflow-x: hidden !important;
-}
-
-.fc-popover input[type="date"],
-.fc-popover input[type="text"],
-.fc-popover input[type="email"],
-.fc-popover input[type="number"],
-.fc-popover select,
-.fc-popover textarea,
-#event-modal input,
-#event-modal select,
-#event-modal textarea,
-.event-modal input,
-.event-modal select,
-.event-modal textarea {
-  display: block;
-  width: 100% !important;
-  max-width: 100% !important;
-  box-sizing: border-box !important;
-  padding: 5px 8px;
-  margin: 6px 0 10px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 14px;
-}
-
-.fc-popover .form-row,
-#event-modal .form-row,
-.event-modal .form-row {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.fc-popover label,
-#event-modal label,
-.event-modal label {
-  display: block;
-  font-weight: 600;
-  margin-bottom: 4px;
-  white-space: normal;
-  word-break: break-word;
-}
-
-.fc-popover .modal-actions,
-#event-modal .modal-actions,
-.event-modal .modal-actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 10px;
-}
-
-.fc-popover .modal-actions button,
-#event-modal .modal-actions button,
-.event-modal .modal-actions button {
-  flex: 1 1 120px;
-}
-
-.fc-popover, .fc-popover .fc-popover-body {
-  max-width: 90vw !important;
-  width: auto !important;
-  overflow-wrap: break-word;
-  word-wrap: break-word;
-}
-
-.fc-popover input,
-.fc-popover textarea,
-.fc-popover select {
-  width: 100% !important;
-  box-sizing: border-box;
-}
-
-.fc-popover form {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  .fc-popover {
+    width: 90% !important;
+    max-height: 85vh !important;
+  }
 }
