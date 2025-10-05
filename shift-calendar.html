@@ -5,22 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Shift Calendar - ShiftPilot</title>
 
-  <!-- 🔹 FullCalendar CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.9/main.min.css" rel="stylesheet">
+  <!-- ✅ FullCalendar CSS (önce) -->
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
 
   <link rel="stylesheet" href="styles.css">
 
   <style>
     body {
       background-color: #f4f6f9;
+      font-family: Arial, sans-serif;
     }
     #calendar {
       max-width: 900px;
-      margin: 40px auto;
+      margin: 30px auto;
       background: white;
       padding: 10px;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
     #back-btn {
       display: block;
@@ -31,7 +32,6 @@
       padding: 10px 16px;
       border-radius: 6px;
       cursor: pointer;
-      font-size: 1rem;
     }
     #back-btn:hover {
       background-color: #0056b3;
@@ -40,85 +40,85 @@
 </head>
 
 <body>
-  <div class="dashboard">
-    <h1>🗓️ Shift Calendar</h1>
-    <div id="calendar"></div>
-    <button id="back-btn">⬅️ Back to Planner</button>
-  </div>
+  <h1 style="text-align:center;">🗓️ Shift Calendar</h1>
+  <div id="calendar"></div>
+  <button id="back-btn">⬅️ Back to Planner</button>
 
-  <!-- ✅ FullCalendar -->
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.9/main.min.js"></script>
+  <!-- ✅ FullCalendar JS (önceden yüklensin) -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
 
-  <!-- ✅ Firebase SDK'ları klasik şekilde -->
-  <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore-compat.js"></script>
+  <!-- ✅ Firebase klasik SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
+  <!-- ✅ Tüm kod en sonda, DOM tamamen yüklendikten sonra -->
   <script>
-    // 🔧 Firebase yapılandırması
-    const firebaseConfig = {
-      apiKey: "AIzaSyARlOXg2YuKrEsRWARCUTiabHoMN1hO3Ks",
-      authDomain: "shiftpilot-b3c1d.firebaseapp.com",
-      projectId: "shiftpilot-b3c1d",
-      storageBucket: "shiftpilot-b3c1d.firebasestorage.app",
-      messagingSenderId: "676810685497",
-      appId: "1:676810685497:web:db3162bc7a394442caa1e8",
-      measurementId: "G-BEJ85FBSCZ"
-    };
+    document.addEventListener("DOMContentLoaded", function () {
+      // 🔧 Firebase yapılandırması
+      const firebaseConfig = {
+        apiKey: "AIzaSyARlOXg2YuKrEsRWARCUTiabHoMN1hO3Ks",
+        authDomain: "shiftpilot-b3c1d.firebaseapp.com",
+        projectId: "shiftpilot-b3c1d",
+        storageBucket: "shiftpilot-b3c1d.firebasestorage.app",
+        messagingSenderId: "676810685497",
+        appId: "1:676810685497:web:db3162bc7a394442caa1e8",
+        measurementId: "G-BEJ85FBSCZ"
+      };
 
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+      firebase.initializeApp(firebaseConfig);
+      const auth = firebase.auth();
+      const db = firebase.firestore();
 
-    const calendarEl = document.getElementById("calendar");
-    const backBtn = document.getElementById("back-btn");
+      const calendarEl = document.getElementById('calendar');
+      const backBtn = document.getElementById('back-btn');
 
-    auth.onAuthStateChanged(async (user) => {
-      if (!user) {
-        window.location.href = "login.html";
-        return;
-      }
-
-      const q = await db.collection("shifts").where("uid", "==", user.uid).get();
-      const events = q.docs.map(doc => {
-        const data = doc.data();
-        return {
-          title: data.type,
-          start: data.date,
-          extendedProps: { note: data.note || "" }
-        };
-      });
-
-      // ✅ FullCalendar başlat
-      const calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: "dayGridMonth",
-        height: 650,
-        selectable: true,
-        events,
-        dateClick: async (info) => {
-          const shiftType = prompt("Enter shift type (Morning/Evening/Night):");
-          if (shiftType) {
-            await db.collection("shifts").add({
-              uid: user.uid,
-              date: info.dateStr,
-              type: shiftType,
-              note: "",
-              createdAt: new Date().toISOString()
-            });
-            alert("✅ Shift added!");
-            calendar.addEvent({ title: shiftType, start: info.dateStr });
-          }
-        },
-        eventClick: (info) => {
-          alert(`📅 ${info.event.title}\n📝 ${info.event.extendedProps.note || "No notes"}`);
+      auth.onAuthStateChanged(async (user) => {
+        if (!user) {
+          window.location.href = "login.html";
+          return;
         }
+
+        const snapshot = await db.collection("shifts").where("uid", "==", user.uid).get();
+        const events = snapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            title: data.type,
+            start: data.date,
+            extendedProps: { note: data.note || "" }
+          };
+        });
+
+        // ✅ FullCalendar başlat (artık tanımlı!)
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+          initialView: 'dayGridMonth',
+          height: 650,
+          events,
+          dateClick: async (info) => {
+            const shiftType = prompt("Enter shift type (Morning/Evening/Night):");
+            if (shiftType) {
+              await db.collection("shifts").add({
+                uid: user.uid,
+                date: info.dateStr,
+                type: shiftType,
+                note: "",
+                createdAt: new Date().toISOString()
+              });
+              alert("✅ Shift added!");
+              calendar.addEvent({ title: shiftType, start: info.dateStr });
+            }
+          },
+          eventClick: (info) => {
+            alert(`📅 ${info.event.title}\n📝 ${info.event.extendedProps.note || "No notes"}`);
+          }
+        });
+
+        calendar.render();
       });
 
-      calendar.render();
-    });
-
-    backBtn.addEventListener("click", () => {
-      window.location.href = "shift.html";
+      backBtn.addEventListener("click", () => {
+        window.location.href = "shift.html";
+      });
     });
   </script>
 </body>
