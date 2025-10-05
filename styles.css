@@ -196,6 +196,47 @@ body {
 
 #back-btn:hover { background-color: #0056b3; }
 
+/* 🪟 FullCalendar Event Modal Fix (taşma düzeltme) */
+.fc-popover {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  max-width: 90% !important;
+  width: 400px !important;
+  z-index: 9999 !important;
+  background: #fff !important;
+  border-radius: 10px !important;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2) !important;
+  overflow: hidden !important;
+}
+
+/* Başlık kısmı */
+.fc-popover .fc-header-toolbar,
+.fc-popover .fc-popover-header {
+  background: #0d6efd !important;
+  color: white !important;
+  padding: 10px !important;
+  font-weight: bold;
+  text-align: center;
+}
+
+/* İçerik alanı */
+.fc-popover .fc-popover-body {
+  padding: 15px !important;
+  max-height: 300px !important;
+  overflow-y: auto !important;
+  font-size: 0.95rem;
+}
+
+/* 📱 Mobilde modal görünümü */
+@media (max-width: 480px) {
+  .fc-popover {
+    width: 90% !important;
+    max-height: 85vh !important;
+  }
+}
+
 /* 📱 Mobil Uyumluluk */
 @media (max-width: 480px) {
   .auth-container,
