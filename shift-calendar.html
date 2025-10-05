@@ -2,26 +2,33 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Shift Calendar - ShiftPilot</title>
 
-  <!-- ✅ FullCalendar CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css" />
+  <!-- FullCalendar CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet"/>
 
   <style>
+    /* 🔒 Bu sayfada styles.css’teki body:flex kuralını iptal ediyoruz */
+    html, body { margin: 0; padding: 0; }
     body {
+      display: block !important;
+      align-items: initial !important;
+      justify-content: initial !important;
+      height: auto !important;
       background-color: #f4f6f9;
       font-family: Arial, sans-serif;
     }
+
     #calendar {
       max-width: 900px;
       margin: 30px auto;
       background: white;
       padding: 10px;
       border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
+
     #back-btn {
       display: block;
       margin: 20px auto;
@@ -32,79 +39,76 @@
       border-radius: 6px;
       cursor: pointer;
     }
-    #back-btn:hover {
-      background-color: #0056b3;
-    }
+    #back-btn:hover { background-color: #0056b3; }
 
-    /* ✅ Modal Tasarımı */
+    /* 🪟 Modal */
     .modal {
-      display: none;
+      display: none; /* JS ile 'flex' yapılacak */
       position: fixed;
-      z-index: 1000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.5);
+      inset: 0;
+      z-index: 9999;
+      background-color: rgba(0,0,0,0.5);
       justify-content: center;
       align-items: center;
     }
     .modal-content {
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-      width: 300px;
-      text-align: center;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      background: #fff;
+      width: 320px;
+      padding: 18px;
+      border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.2);
     }
-    .modal-content h3 {
-      margin-top: 0;
-    }
-    .modal-content input,
-    .modal-content select {
+    .modal-content h3 { margin: 0 0 12px; }
+    .modal-content input, .modal-content select {
       width: 100%;
-      padding: 8px;
-      margin-bottom: 10px;
+      padding: 8px 10px;
+      margin: 6px 0 10px;
       border: 1px solid #ccc;
       border-radius: 6px;
+      font-size: 14px;
     }
-    .modal-content button {
-      margin: 5px;
-      padding: 8px 12px;
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .modal-actions button {
+      flex: 1;
       border: none;
       border-radius: 6px;
+      padding: 8px 10px;
+      color: #fff;
       cursor: pointer;
-      color: white;
+      font-weight: 600;
     }
-    #save-btn {
-      background-color: #198754;
-    }
-    #delete-btn {
-      background-color: #dc3545;
-    }
-    #close-btn {
-      background-color: #6c757d;
-    }
+    #save-btn   { background: #198754; }
+    #delete-btn { background: #dc3545; }
+    #close-btn  { background: #6c757d; }
   </style>
 </head>
-
 <body>
-  <h1 style="text-align: center;">🗓️ Shift Calendar</h1>
+  <h1 style="text-align:center; margin:20px 0;">🗓️ Shift Calendar</h1>
   <div id="calendar"></div>
   <button id="back-btn">⬅️ Back to Planner</button>
 
-  <!-- ✅ Modal -->
+  <!-- 🪟 Modal -->
   <div id="editModal" class="modal">
     <div class="modal-content">
       <h3>Edit Shift</h3>
-      <input type="date" id="edit-date" />
+      <label>Date</label>
+      <input type="date" id="edit-date"/>
+
+      <label>Type</label>
       <select id="edit-type">
         <option value="Morning">Morning</option>
         <option value="Evening">Evening</option>
         <option value="Night">Night</option>
       </select>
-      <input type="text" id="edit-note" placeholder="Note (optional)" />
-      <div>
+
+      <label>Note</label>
+      <input type="text" id="edit-note" placeholder="Note (optional)"/>
+
+      <div class="modal-actions">
         <button id="save-btn">💾 Save</button>
         <button id="delete-btn">🗑️ Delete</button>
         <button id="close-btn">✖ Close</button>
@@ -112,15 +116,16 @@
     </div>
   </div>
 
-  <!-- ✅ FullCalendar & Firebase -->
+  <!-- FullCalendar -->
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+  <!-- Firebase compat SDK (aynı projeyi kullanıyoruz) -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
   <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      // 🔧 Firebase config
+    document.addEventListener("DOMContentLoaded", () => {
+      // Firebase config
       const firebaseConfig = {
         apiKey: "AIzaSyARlOXg2YuKrEsRWARCUTiabHoMN1hO3Ks",
         authDomain: "shiftpilot-b3c1d.firebaseapp.com",
@@ -130,45 +135,64 @@
         appId: "1:676810685497:web:db3162bc7a394442caa1e8",
         measurementId: "G-BEJ85FBSCZ"
       };
-
       firebase.initializeApp(firebaseConfig);
       const auth = firebase.auth();
-      const db = firebase.firestore();
+      const db   = firebase.firestore();
 
       const calendarEl = document.getElementById("calendar");
-      const backBtn = document.getElementById("back-btn");
+      const backBtn    = document.getElementById("back-btn");
 
-      // Modal referansları
-      const modal = document.getElementById("editModal");
-      const editDate = document.getElementById("edit-date");
-      const editType = document.getElementById("edit-type");
-      const editNote = document.getElementById("edit-note");
-      const saveBtn = document.getElementById("save-btn");
+      // Modal refs
+      const modal     = document.getElementById("editModal");
+      const editDate  = document.getElementById("edit-date");
+      const editType  = document.getElementById("edit-type");
+      const editNote  = document.getElementById("edit-note");
+      const saveBtn   = document.getElementById("save-btn");
       const deleteBtn = document.getElementById("delete-btn");
-      const closeBtn = document.getElementById("close-btn");
+      const closeBtn  = document.getElementById("close-btn");
 
       let selectedEvent = null;
 
-      auth.onAuthStateChanged(async (user) => {
-        if (!user) {
-          window.location.href = "login.html";
-          return;
-        }
+      const colorForType = (type) => {
+        if (type === "Morning") return "#198754";
+        if (type === "Evening") return "#ffc107";
+        return "#0d6efd"; // Night & default
+      };
 
-        const snapshot = await db.collection("shifts").where("uid", "==", user.uid).get();
-        const events = snapshot.docs.map((doc) => {
-          const data = doc.data();
+      const openModal = (evt) => {
+        selectedEvent = evt;
+        // Tarihi YYYY-MM-DD formatında doldur
+        const iso = evt.startStr.substring(0, 10);
+        editDate.value = iso;
+        editType.value = evt.title;
+        editNote.value = evt.extendedProps?.note || "";
+        modal.style.display = "flex"; // GÖSTER
+      };
+      const closeModal = () => {
+        modal.style.display = "none";
+        selectedEvent = null;
+      };
+
+      // Dışarı tıklayınca kapansın
+      modal.addEventListener("click", (e) => {
+        if (e.target === modal) closeModal();
+      });
+      closeBtn.addEventListener("click", closeModal);
+
+      auth.onAuthStateChanged(async (user) => {
+        if (!user) { window.location.href = "login.html"; return; }
+
+        // Firestore'dan etkinlikler
+        const snap = await db.collection("shifts").where("uid", "==", user.uid).get();
+        const events = snap.docs.map(d => {
+          const data = d.data();
           return {
-            id: doc.id,
+            id: d.id,
             title: data.type,
             start: data.date,
-            color:
-              data.type === "Morning"
-                ? "#198754"
-                : data.type === "Evening"
-                ? "#ffc107"
-                : "#0d6efd",
-            extendedProps: { note: data.note || "" },
+            color: colorForType(data.type),
+            textColor: (data.type === "Evening") ? "#000" : "#fff",
+            extendedProps: { note: data.note || "" }
           };
         });
 
@@ -177,35 +201,27 @@
           height: 650,
           events,
           dateClick: async (info) => {
-            const shiftType = prompt("Enter shift type (Morning/Evening/Night):");
-            if (shiftType) {
-              await db.collection("shifts").add({
-                uid: user.uid,
-                date: info.dateStr,
-                type: shiftType,
-                note: "",
-                createdAt: new Date().toISOString(),
-              });
-              calendar.addEvent({
-                title: shiftType,
-                start: info.dateStr,
-                color:
-                  shiftType === "Morning"
-                    ? "#198754"
-                    : shiftType === "Evening"
-                    ? "#ffc107"
-                    : "#0d6efd",
-              });
-              alert("✅ Shift added!");
-            }
+            const type = prompt("Enter shift type (Morning/Evening/Night):");
+            if (!type) return;
+            await db.collection("shifts").add({
+              uid: user.uid,
+              date: info.dateStr,
+              type,
+              note: "",
+              createdAt: new Date().toISOString()
+            });
+            calendar.addEvent({
+              title: type,
+              start: info.dateStr,
+              color: colorForType(type),
+              textColor: (type === "Evening") ? "#000" : "#fff"
+            });
+            alert("✅ Shift added!");
           },
           eventClick: (info) => {
-            selectedEvent = info.event;
-            editDate.value = info.event.startStr;
-            editType.value = info.event.title;
-            editNote.value = info.event.extendedProps.note || "";
-            modal.style.display = "flex";
-          },
+            // Modalı aç
+            openModal(info.event);
+          }
         });
 
         calendar.render();
@@ -220,44 +236,32 @@
           await db.collection("shifts").doc(selectedEvent.id).update({
             date: newDate,
             type: newType,
-            note: newNote,
+            note: newNote
           });
 
           selectedEvent.setProp("title", newType);
           selectedEvent.setProp("start", newDate);
-          selectedEvent.setProp(
-            "color",
-            newType === "Morning"
-              ? "#198754"
-              : newType === "Evening"
-              ? "#ffc107"
-              : "#0d6efd"
-          );
+          selectedEvent.setProp("color", colorForType(newType));
+          selectedEvent.setProp("textColor", (newType === "Evening") ? "#000" : "#fff");
           selectedEvent.setExtendedProp("note", newNote);
+
+          closeModal();
           alert("✅ Shift updated!");
-          modal.style.display = "none";
         });
 
         // 🗑️ Sil
         deleteBtn.addEventListener("click", async () => {
           if (!selectedEvent) return;
-          if (confirm("Delete this shift?")) {
-            await db.collection("shifts").doc(selectedEvent.id).delete();
-            selectedEvent.remove();
-            alert("🗑️ Shift deleted!");
-            modal.style.display = "none";
-          }
-        });
+          if (!confirm("Delete this shift?")) return;
 
-        // ✖ Kapat
-        closeBtn.addEventListener("click", () => {
-          modal.style.display = "none";
+          await db.collection("shifts").doc(selectedEvent.id).delete();
+          selectedEvent.remove();
+          closeModal();
+          alert("🗑️ Shift deleted!");
         });
       });
 
-      backBtn.addEventListener("click", () => {
-        window.location.href = "shift.html";
-      });
+      backBtn.addEventListener("click", () => window.location.href = "shift.html");
     });
   </script>
 </body>
