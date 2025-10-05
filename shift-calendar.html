@@ -5,9 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Shift Calendar - ShiftPilot</title>
 
-  <!-- ✅ FullCalendar CSS (önce) -->
+  <!-- ✅ FullCalendar CSS -->
   <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
-
   <link rel="stylesheet" href="styles.css">
 
   <style>
@@ -44,7 +43,7 @@
   <div id="calendar"></div>
   <button id="back-btn">⬅️ Back to Planner</button>
 
-  <!-- ✅ FullCalendar JS (önceden yüklensin) -->
+  <!-- ✅ FullCalendar -->
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
 
   <!-- ✅ Firebase klasik SDK -->
@@ -52,7 +51,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
-  <!-- ✅ Tüm kod en sonda, DOM tamamen yüklendikten sonra -->
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       // 🔧 Firebase yapılandırması
@@ -79,17 +77,28 @@
           return;
         }
 
+        // 🔹 Firestore'dan vardiyaları al
         const snapshot = await db.collection("shifts").where("uid", "==", user.uid).get();
         const events = snapshot.docs.map(doc => {
           const data = doc.data();
+
+          // 🔹 Renk belirleme
+          let color = "#6c757d";
+          if (data.type === "Morning") color = "#28a745"; // yeşil
+          else if (data.type === "Evening") color = "#fd7e14"; // turuncu
+          else if (data.type === "Night") color = "#007bff"; // mavi
+
           return {
             title: data.type,
             start: data.date,
+            backgroundColor: color,
+            borderColor: color,
+            textColor: "white",
             extendedProps: { note: data.note || "" }
           };
         });
 
-        // ✅ FullCalendar başlat (artık tanımlı!)
+        // ✅ FullCalendar başlat
         const calendar = new FullCalendar.Calendar(calendarEl, {
           initialView: 'dayGridMonth',
           height: 650,
@@ -97,6 +106,12 @@
           dateClick: async (info) => {
             const shiftType = prompt("Enter shift type (Morning/Evening/Night):");
             if (shiftType) {
+              // 🔹 Renk belirleme
+              let color = "#6c757d";
+              if (shiftType === "Morning") color = "#28a745";
+              else if (shiftType === "Evening") color = "#fd7e14";
+              else if (shiftType === "Night") color = "#007bff";
+
               await db.collection("shifts").add({
                 uid: user.uid,
                 date: info.dateStr,
@@ -105,7 +120,13 @@
                 createdAt: new Date().toISOString()
               });
               alert("✅ Shift added!");
-              calendar.addEvent({ title: shiftType, start: info.dateStr });
+              calendar.addEvent({
+                title: shiftType,
+                start: info.dateStr,
+                backgroundColor: color,
+                borderColor: color,
+                textColor: "white"
+              });
             }
           },
           eventClick: (info) => {

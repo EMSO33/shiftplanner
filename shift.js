@@ -23,13 +23,13 @@ const logoutBtn = document.getElementById("logout-btn");
 const calendarBtn = document.getElementById("calendar-btn");
 
 let currentUser = null;
-let editShiftId = null;
+let editShiftId = null; // düzenlenecek vardiya ID’si
 
 // 🔐 Kullanıcı oturumunu dinle
 onAuthStateChanged(auth, async (user) => {
   if (user) {
     currentUser = user;
-    loadShifts();
+    await loadShifts();
   } else {
     window.location.replace("login.html");
   }
@@ -68,7 +68,7 @@ addShiftBtn.addEventListener("click", async () => {
 
     shiftDate.value = "";
     shiftNote.value = "";
-    loadShifts();
+    await loadShifts();
   } catch (error) {
     console.error(error);
     alert("❌ Error saving shift: " + error.message);
@@ -86,60 +86,69 @@ async function loadShifts() {
 
     if (querySnapshot.empty) {
       shiftList.innerHTML = "<li>No shifts yet.</li>";
-    } else {
-      const shifts = [];
-      querySnapshot.forEach((docSnap) => {
-        shifts.push({ id: docSnap.id, ...docSnap.data() });
-      });
-
-      // Tarihe göre sırala
-      shifts.sort((a, b) => new Date(a.date) - new Date(b.date));
-
-      shifts.forEach((shift) => {
-        const item = document.createElement("li");
-        item.classList.add("shift-item");
-
-        // Vardiya bilgisi
-        const info = document.createElement("span");
-        info.textContent = `${shift.date} - ${shift.type} (${shift.note})`;
-
-        // ✏️ Edit butonu
-        const editBtn = document.createElement("button");
-        editBtn.textContent = "Edit";
-        editBtn.className = "edit-btn";
-        editBtn.addEventListener("click", () => {
-          shiftDate.value = shift.date;
-          shiftType.value = shift.type;
-          shiftNote.value = shift.note;
-          editShiftId = shift.id;
-          addShiftBtn.textContent = "Update Shift";
-          alert("📝 Editing mode activated");
-        });
-
-        // 🗑️ Delete butonu
-        const delBtn = document.createElement("button");
-        delBtn.textContent = "Delete";
-        delBtn.className = "delete-btn";
-        delBtn.addEventListener("click", async () => {
-          if (confirm("Are you sure you want to delete this shift?")) {
-            try {
-              await deleteDoc(doc(db, "shifts", shift.id));
-              alert("🗑️ Shift deleted!");
-              loadShifts();
-            } catch (err) {
-              console.error(err);
-              alert("❌ Error deleting shift: " + err.message);
-            }
-          }
-        });
-
-        // Listeye ekle
-        item.appendChild(info);
-        item.appendChild(editBtn);
-        item.appendChild(delBtn);
-        shiftList.appendChild(item);
-      });
+      return;
     }
+
+    const shifts = [];
+    querySnapshot.forEach((docSnap) => {
+      shifts.push({ id: docSnap.id, ...docSnap.data() });
+    });
+
+    // 📆 Tarihe göre sırala
+    shifts.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    shifts.forEach((shift) => {
+      const item = document.createElement("li");
+      item.classList.add("shift-item");
+
+      // 🔹 Renkli gösterim
+      let color = "#6c757d";
+      if (shift.type === "Morning") color = "#28a745";
+      else if (shift.type === "Evening") color = "#fd7e14";
+      else if (shift.type === "Night") color = "#007bff";
+
+      // 📋 Vardiya bilgisi
+      const info = document.createElement("span");
+      info.textContent = `${shift.date} - ${shift.type} (${shift.note || ""})`;
+      info.style.color = color;
+      info.style.fontWeight = "500";
+
+      // ✏️ Edit butonu
+      const editBtn = document.createElement("button");
+      editBtn.textContent = "Edit";
+      editBtn.className = "edit-btn";
+      editBtn.addEventListener("click", () => {
+        shiftDate.value = shift.date;
+        shiftType.value = shift.type;
+        shiftNote.value = shift.note;
+        editShiftId = shift.id;
+        addShiftBtn.textContent = "Update Shift";
+        alert("📝 Editing mode activated");
+      });
+
+      // 🗑️ Delete butonu
+      const delBtn = document.createElement("button");
+      delBtn.textContent = "Delete";
+      delBtn.className = "delete-btn";
+      delBtn.addEventListener("click", async () => {
+        if (confirm("Are you sure you want to delete this shift?")) {
+          try {
+            await deleteDoc(doc(db, "shifts", shift.id));
+            alert("🗑️ Shift deleted!");
+            await loadShifts();
+          } catch (err) {
+            console.error(err);
+            alert("❌ Error deleting shift: " + err.message);
+          }
+        }
+      });
+
+      // 📋 Listeye ekle
+      item.appendChild(info);
+      item.appendChild(editBtn);
+      item.appendChild(delBtn);
+      shiftList.appendChild(item);
+    });
   } catch (error) {
     console.error(error);
     alert("❌ Error loading shifts: " + error.message);
@@ -152,7 +161,7 @@ logoutBtn.addEventListener("click", async () => {
   window.location.replace("login.html");
 });
 
-// 📆 Takvim sayfasına yönlendirme
+// 🗓️ Takvim sayfasına yönlendirme
 if (calendarBtn) {
   calendarBtn.addEventListener("click", () => {
     window.location.href = "shift-calendar.html";
