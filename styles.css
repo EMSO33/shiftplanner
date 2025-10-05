@@ -287,7 +287,11 @@ body {
   width: 100% !important;
   max-width: 100% !important;
   box-sizing: border-box !important;
-  margin: 6px 0;
+  padding: 5px 8px;   /* ✅ doğru sıra */
+  margin: 6px 0 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
 }
 
 /* Etiket + alan dikey yığılma ve eşit boşluk */
@@ -324,4 +328,24 @@ body {
 #event-modal .modal-actions button,
 .event-modal .modal-actions button {
   flex: 1 1 120px; /* dar alanda kırılabilsin */
+}
+/* ✅ Modal (Edit Shift) düzeltmesi */
+.fc-popover, .fc-popover .fc-popover-body {
+  max-width: 90vw !important;
+  width: auto !important;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+.fc-popover input,
+.fc-popover textarea,
+.fc-popover select {
+  width: 100% !important;
+  box-sizing: border-box;
+}
+
+.fc-popover form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
