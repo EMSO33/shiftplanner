@@ -1,291 +1,345 @@
-﻿/* 🌐 GENEL SAYFA STİLİ */
-body {
-  font-family: Arial, sans-serif;
-  background-color: #f4f6f9;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  margin: 0;
-}
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Shift Calendar - ShiftPilot</title>
 
-/* 🔐 Login & Register Container */
-.auth-container {
-  background: #fff;
-  padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  width: 320px;
-  text-align: center;
-}
+  <!-- FullCalendar CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet"/>
 
-.auth-container h2 {
-  margin-bottom: 1rem;
-  color: #333;
-}
+  <style>
+    html, body { margin: 0; padding: 0; }
+    body {
+      display: block !important;
+      align-items: initial !important;
+      justify-content: initial !important;
+      height: auto !important;
+      background-color: #f4f6f9;
+      font-family: "Segoe UI", Roboto, Arial, sans-serif;
+    }
 
-.auth-container input {
-  display: block;
-  width: 100%;
-  padding: 0.7rem;
-  margin: 0.6rem 0;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 1rem;
-}
+    #calendar {
+      max-width: 900px;
+      margin: 30px auto;
+      background: white;
+      padding: 10px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
 
-.auth-container button {
-  background-color: #007bff;
-  color: white;
-  border: none;
-  padding: 0.7rem;
-  width: 100%;
-  border-radius: 6px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
+    #back-btn {
+      display: block;
+      margin: 20px auto;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.3s;
+    }
+    #back-btn:hover { background-color: #0056b3; transform: scale(1.03); }
 
-.auth-container button:hover {
-  background-color: #0056b3;
-}
+    /* 🌫️ Apple tarzı modal arkaplan */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background-color: rgba(0,0,0,0.25);
+      backdrop-filter: blur(8px) saturate(180%);
+      -webkit-backdrop-filter: blur(8px) saturate(180%);
+      justify-content: center;
+      align-items: center;
+      transition: opacity 0.3s ease;
+    }
 
-/* 🖥️ Dashboard */
-.dashboard {
-  background: #fff;
-  padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  width: 360px;
-  text-align: center;
-}
+    /* 🍎 Modal kutusu */
+    .modal-content {
+      position: relative;
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 16px;
+      width: 360px;
+      max-width: 90%;
+      padding: 26px 22px 22px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+      animation: fadeUp 0.35s ease;
+    }
 
-.dashboard h1 {
-  color: #333;
-  margin-bottom: 1rem;
-}
+    @keyframes fadeUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
 
-#welcome-text {
-  color: #555;
-  margin-bottom: 1.5rem;
-}
+    /* ❌ Kapatma ikonu */
+    .close-icon {
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      font-size: 22px;
+      color: #666;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .close-icon:hover {
+      color: #dc3545;
+      transform: scale(1.2);
+    }
 
-/* 🔘 Dashboard Buton Grubu */
-.button-group {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-top: 10px;
-}
+    /* Başlık */
+    .modal-content h3 {
+      margin: 0 0 18px;
+      text-align: center;
+      font-size: 1.4rem;
+      color: #0d6efd;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
 
-.button-group button {
-  padding: 0.8rem 1rem;
-  font-size: 1rem;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.3s, transform 0.1s ease-in;
-  color: white;
-  width: 100%;
-  margin: 0;
-}
+    .modal-content label {
+      font-weight: 600;
+      display: block;
+      margin-bottom: 5px;
+      color: #333;
+    }
 
-.button-group button:hover {
-  transform: scale(1.03);
-}
+    .modal-content input,
+    .modal-content select {
+      width: 100%;
+      padding: 5px 8px;
+      margin-bottom: 12px;
+      border: 1px solid rgba(0,0,0,0.15);
+      border-radius: 6px;
+      font-size: 14px;
+      box-sizing: border-box;
+      background-color: rgba(255,255,255,0.85);
+      transition: all 0.2s ease;
+    }
 
-/* 🎨 Renk temaları */
-#planner-btn { background-color: #198754; }
-#planner-btn:hover { background-color: #157347; }
+    .modal-content input:focus,
+    .modal-content select:focus {
+      border-color: #0d6efd;
+      outline: none;
+      box-shadow: 0 0 6px rgba(13,110,253,0.3);
+    }
 
-#calendar-btn { background-color: #0d6efd; }
-#calendar-btn:hover { background-color: #0b5ed7; }
+    /* 🎨 Butonlar */
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
 
-#stats-btn { background-color: #fd7e14; }
-#stats-btn:hover { background-color: #e76f00; }
+    .modal-actions button {
+      flex: 1;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: #fff;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: 0.25s ease;
+    }
 
-#logout-btn { background-color: #e63946; }
-#logout-btn:hover { background-color: #c1121f; }
+    #save-btn   { background: linear-gradient(135deg, #198754, #27ae60); }
+    #delete-btn { background: linear-gradient(135deg, #dc3545, #c0392b); }
+    #close-btn  { background: linear-gradient(135deg, #6c757d, #495057); }
 
-/* 📅 Shift Planner Sayfası */
-.shift-form {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-  margin-bottom: 1.5rem;
-}
+    .modal-actions button:hover {
+      transform: scale(1.04);
+      filter: brightness(1.1);
+    }
 
-.shift-form input,
-.shift-form select {
-  padding: 0.6rem;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-}
+    @media (max-width: 480px) {
+      .modal-content {
+        width: 90%;
+        padding: 22px 18px;
+      }
+      .modal-actions {
+        flex-direction: column;
+      }
+      .modal-actions button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1 style="text-align:center; margin:20px 0;">🗓️ Shift Calendar</h1>
+  <div id="calendar"></div>
+  <button id="back-btn">⬅️ Back to Planner</button>
 
-/* 🧾 Vardiya Listesi */
-#shift-list {
-  text-align: left;
-  padding-left: 0;
-  list-style: none;
-  width: 100%;
-  max-height: 300px;
-  overflow-y: auto;
-  margin: 0;
-}
+  <!-- 🪟 Modal -->
+  <div id="editModal" class="modal">
+    <div class="modal-content">
+      <span class="close-icon" id="top-close">✖</span>
+      <h3>✏️ Edit Shift</h3>
+      <label>Date</label>
+      <input type="date" id="edit-date"/>
 
-#shift-list li {
-  background: #f8f9fa;
-  margin-bottom: 8px;
-  padding: 10px 12px;
-  border-radius: 6px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: nowrap;
-}
+      <label>Type</label>
+      <select id="edit-type">
+        <option value="Morning">Morning</option>
+        <option value="Evening">Evening</option>
+        <option value="Night">Night</option>
+      </select>
 
-#shift-list li > span {
-  flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-right: 8px;
-}
+      <label>Note</label>
+      <input type="text" id="edit-note" placeholder="Note (optional)"/>
 
-/* ✏️ Edit & 🗑️ Delete Butonları */
-.edit-btn,
-.delete-btn {
-  margin-left: 8px;
-  padding: 6px 10px;
-  font-size: 0.9rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: transform 0.1s ease-in;
-  flex-shrink: 0;
-}
+      <div class="modal-actions">
+        <button id="save-btn">💾 Save</button>
+        <button id="delete-btn">🗑️ Delete</button>
+        <button id="close-btn">Close</button>
+      </div>
+    </div>
+  </div>
 
-.edit-btn { background: #ffc107; color: #000; }
-.delete-btn { background: #dc3545; color: #fff; }
+  <!-- FullCalendar -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
-.edit-btn:hover,
-.delete-btn:hover { transform: scale(1.05); }
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const firebaseConfig = {
+        apiKey: "AIzaSyARlOXg2YuKrEsRWARCUTiabHoMN1hO3Ks",
+        authDomain: "shiftpilot-b3c1d.firebaseapp.com",
+        projectId: "shiftpilot-b3c1d",
+        storageBucket: "shiftpilot-b3c1d.firebasestorage.app",
+        messagingSenderId: "676810685497",
+        appId: "1:676810685497:web:db3162bc7a394442caa1e8",
+        measurementId: "G-BEJ85FBSCZ"
+      };
+      firebase.initializeApp(firebaseConfig);
+      const auth = firebase.auth();
+      const db   = firebase.firestore();
 
-/* 🗓️ FullCalendar kapsayıcıları */
-#calendar {
-  max-width: 100%;
-  margin: 20px auto;
-  background: white;
-  border-radius: 12px;
-  padding: 10px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.1);
-}
+      const calendarEl = document.getElementById("calendar");
+      const backBtn    = document.getElementById("back-btn");
 
-#back-btn {
-  margin-top: 20px;
-  padding: 0.6rem 1rem;
-  border: none;
-  background-color: #007bff;
-  color: white;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: 0.3s;
-}
+      const modal     = document.getElementById("editModal");
+      const editDate  = document.getElementById("edit-date");
+      const editType  = document.getElementById("edit-type");
+      const editNote  = document.getElementById("edit-note");
+      const saveBtn   = document.getElementById("save-btn");
+      const deleteBtn = document.getElementById("delete-btn");
+      const closeBtn  = document.getElementById("close-btn");
+      const topClose  = document.getElementById("top-close");
 
-#back-btn:hover { background-color: #0056b3; }
+      let selectedEvent = null;
 
-/* 🪟 FullCalendar Event Modal */
-.fc-popover {
-  position: fixed !important;
-  top: 50% !important;
-  left: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  max-width: 90% !important;
-  width: 400px !important;
-  z-index: 9999 !important;
-  background: #fff !important;
-  border-radius: 10px !important;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2) !important;
-  overflow: hidden !important;
-}
+      const colorForType = (type) => {
+        if (type === "Morning") return "#198754";
+        if (type === "Evening") return "#ffc107";
+        return "#0d6efd";
+      };
 
-.fc-popover .fc-popover-body {
-  padding: 15px !important;
-  max-height: 300px !important;
-  overflow-y: auto !important;
-  font-size: 0.95rem;
-  overflow-x: hidden !important;
-}
+      const openModal = (evt) => {
+        selectedEvent = evt;
+        const iso = evt.startStr.substring(0, 10);
+        editDate.value = iso;
+        editType.value = evt.title;
+        editNote.value = evt.extendedProps?.note || "";
+        modal.style.display = "flex";
+      };
 
-/* 🧩 Modal input alanları */
-.fc-popover input,
-.fc-popover select,
-.fc-popover textarea,
-#event-modal input,
-#event-modal select,
-#event-modal textarea {
-  display: block;
-  width: 100% !important;
-  max-width: 100% !important;
-  box-sizing: border-box !important;
-  padding: 8px 5px;   /* ✅ taşma önlendi */
-  margin: 6px 0 10px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 14px;
-}
+      const closeModal = () => {
+        modal.style.display = "none";
+        selectedEvent = null;
+      };
 
-/* Etiketler */
-.fc-popover label {
-  display: block;
-  font-weight: 600;
-  margin-bottom: 4px;
-}
+      modal.addEventListener("click", (e) => {
+        if (e.target === modal) closeModal();
+      });
+      closeBtn.addEventListener("click", closeModal);
+      topClose.addEventListener("click", closeModal);
 
-/* Modal butonları */
-.fc-popover .modal-actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 10px;
-}
+      auth.onAuthStateChanged(async (user) => {
+        if (!user) { window.location.href = "login.html"; return; }
 
-.fc-popover .modal-actions button {
-  flex: 1 1 120px;
-}
+        const snap = await db.collection("shifts").where("uid", "==", user.uid).get();
+        const events = snap.docs.map(d => {
+          const data = d.data();
+          return {
+            id: d.id,
+            title: data.type,
+            start: data.date,
+            color: colorForType(data.type),
+            textColor: (data.type === "Evening") ? "#000" : "#fff",
+            extendedProps: { note: data.note || "" }
+          };
+        });
 
-/* 📱 Mobil Uyumluluk */
-@media (max-width: 480px) {
-  .auth-container,
-  .dashboard {
-    width: 90%;
-    padding: 1.5rem;
-  }
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+          initialView: "dayGridMonth",
+          height: 650,
+          events,
+          dateClick: async (info) => {
+            const type = prompt("Enter shift type (Morning/Evening/Night):");
+            if (!type) return;
+            await db.collection("shifts").add({
+              uid: user.uid,
+              date: info.dateStr,
+              type,
+              note: "",
+              createdAt: new Date().toISOString()
+            });
+            calendar.addEvent({
+              title: type,
+              start: info.dateStr,
+              color: colorForType(type),
+              textColor: (type === "Evening") ? "#000" : "#fff"
+            });
+            alert("✅ Shift added!");
+          },
+          eventClick: (info) => openModal(info.event)
+        });
 
-  #shift-list li {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-    flex-wrap: wrap;
-  }
+        calendar.render();
 
-  #shift-list li > span {
-    white-space: normal;
-  }
+        saveBtn.addEventListener("click", async () => {
+          if (!selectedEvent) return;
+          const newType = editType.value;
+          const newNote = editNote.value;
+          const newDate = editDate.value;
 
-  .edit-btn,
-  .delete-btn {
-    width: 48%;
-    margin-top: 4px;
-  }
+          await db.collection("shifts").doc(selectedEvent.id).update({
+            date: newDate,
+            type: newType,
+            note: newNote
+          });
 
-  .button-group button {
-    font-size: 0.95rem;
-  }
+          selectedEvent.setProp("title", newType);
+          selectedEvent.setProp("start", newDate);
+          selectedEvent.setProp("color", colorForType(newType));
+          selectedEvent.setProp("textColor", (newType === "Evening") ? "#000" : "#fff");
+          selectedEvent.setExtendedProp("note", newNote);
 
-  .fc-popover {
-    width: 90% !important;
-    max-height: 85vh !important;
-  }
-}
+          closeModal();
+          alert("✅ Shift updated!");
+        });
+
+        deleteBtn.addEventListener("click", async () => {
+          if (!selectedEvent) return;
+          if (!confirm("Delete this shift?")) return;
+
+          await db.collection("shifts").doc(selectedEvent.id).delete();
+          selectedEvent.remove();
+          closeModal();
+          alert("🗑️ Shift deleted!");
+        });
+      });
+
+      backBtn.addEventListener("click", () => window.location.href = "shift.html");
+    });
+  </script>
+</body>
+</html>
