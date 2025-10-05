@@ -11,10 +11,13 @@
     <h1>ShiftPilot Dashboard</h1>
     <p id="welcome-text">Loading user info...</p>
 
-    <!-- 🔹 Yeni buton -->
-    <button id="planner-btn">Go to Shift Planner</button>
-
-    <button id="logout-btn">Logout</button>
+    <!-- 🔹 Dashboard Butonları -->
+    <div class="button-group">
+      <button id="planner-btn">🗓️ Go to Shift Planner</button>
+      <button id="calendar-btn">📅 View Calendar</button>
+      <button id="stats-btn">📊 View Stats</button>
+      <button id="logout-btn">Logout</button>
+    </div>
   </div>
 
   <script type="module" src="firebase.js"></script>
@@ -25,8 +28,10 @@
     const welcomeText = document.getElementById("welcome-text");
     const logoutBtn = document.getElementById("logout-btn");
     const plannerBtn = document.getElementById("planner-btn");
+    const calendarBtn = document.getElementById("calendar-btn");
+    const statsBtn = document.getElementById("stats-btn");
 
-    // Kullanıcı oturum durumunu kontrol et
+    // 🔐 Kullanıcı oturum kontrolü
     onAuthStateChanged(auth, (user) => {
       if (user) {
         welcomeText.textContent = `Welcome, ${user.email} 👋`;
@@ -35,16 +40,26 @@
       }
     });
 
-    // Logout işlemi
+    // 🚪 Logout
     logoutBtn.addEventListener("click", async () => {
       await signOut(auth);
       alert("👋 Logged out successfully!");
       window.location.replace("login.html");
     });
 
-    // Yeni buton: Shift Planner'a git
+    // 🗓️ Shift Planner yönlendirme
     plannerBtn.addEventListener("click", () => {
       window.location.href = "shift.html";
+    });
+
+    // 📅 Takvim yönlendirme
+    calendarBtn.addEventListener("click", () => {
+      window.location.href = "shift-calendar.html";
+    });
+
+    // 📊 İstatistik sayfasına yönlendirme
+    statsBtn.addEventListener("click", () => {
+      window.location.href = "shift-stats.html";
     });
   </script>
 </body>
