@@ -1,9 +1,9 @@
 import { auth, db } from "./firebase.js";
-import { 
-  collection, addDoc, query, where, getDocs, deleteDoc, doc, updateDoc 
+import {
+  collection, addDoc, query, where, getDocs, deleteDoc, doc, updateDoc
 } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
-import { 
-  onAuthStateChanged, signOut 
+import {
+  onAuthStateChanged, signOut
 } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
 
 const shiftDate = document.getElementById("shift-date");
@@ -14,7 +14,7 @@ const shiftList = document.getElementById("shift-list");
 const logoutBtn = document.getElementById("logout-btn");
 
 let currentUser = null;
-let editShiftId = null; // ✏️ düzenleme için geçici ID
+let editShiftId = null; // düzenlenecek vardiya ID’si
 
 // 🔐 Kullanıcı oturumunu dinle
 onAuthStateChanged(auth, async (user) => {
@@ -35,7 +35,7 @@ addShiftBtn.addEventListener("click", async () => {
 
   try {
     if (editShiftId) {
-      // 🔄 Güncelleme işlemi
+      // 🔄 Güncelleme
       const shiftRef = doc(db, "shifts", editShiftId);
       await updateDoc(shiftRef, {
         date: shiftDate.value,
@@ -46,13 +46,13 @@ addShiftBtn.addEventListener("click", async () => {
       editShiftId = null;
       addShiftBtn.textContent = "Add Shift";
     } else {
-      // ➕ Yeni vardiya ekleme
+      // ➕ Yeni ekleme
       await addDoc(collection(db, "shifts"), {
         uid: currentUser.uid,
         date: shiftDate.value,
         type: shiftType.value,
         note: shiftNote.value || "",
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       });
       alert("✅ Shift added!");
     }
@@ -66,16 +66,12 @@ addShiftBtn.addEventListener("click", async () => {
   }
 });
 
-// 📅 Vardiyaları getir ve listele
+// 📅 Vardiyaları listele
 async function loadShifts() {
   shiftList.innerHTML = "<li>Loading...</li>";
 
   try {
-    const q = query(
-      collection(db, "shifts"),
-      where("uid", "==", currentUser.uid)
-    );
-
+    const q = query(collection(db, "shifts"), where("uid", "==", currentUser.uid));
     const querySnapshot = await getDocs(q);
     shiftList.innerHTML = "";
 
@@ -87,38 +83,40 @@ async function loadShifts() {
         shifts.push({ id: docSnap.id, ...docSnap.data() });
       });
 
+      // Tarihe göre sırala
       shifts.sort((a, b) => new Date(a.date) - new Date(b.date));
 
       shifts.forEach((shift) => {
         const item = document.createElement("li");
+        item.classList.add("shift-item");
 
+        // Vardiya bilgisi
         const info = document.createElement("span");
         info.textContent = `${shift.date} - ${shift.type} (${shift.note})`;
 
-        // 🗑️ Sil butonu
-        const delBtn = document.createElement("button");
-        delBtn.textContent = "Delete";
-        delBtn.className = "delete-btn";
-
-        delBtn.addEventListener("click", async () => {
-          if (confirm("Are you sure you want to delete this shift?")) {
-            await deleteDoc(doc(db, "shifts", shift.id));
-            alert("🗑️ Shift deleted!");
-            loadShifts();
-          }
-        });
-
-        // ✏️ Düzenle butonu
+        // ✏️ Edit butonu
         const editBtn = document.createElement("button");
         editBtn.textContent = "Edit";
         editBtn.className = "edit-btn";
-
         editBtn.addEventListener("click", () => {
           shiftDate.value = shift.date;
           shiftType.value = shift.type;
           shiftNote.value = shift.note;
           editShiftId = shift.id;
           addShiftBtn.textContent = "Update Shift";
+          alert("📝 Editing mode activated");
+        });
+
+        // 🗑️ Delete butonu
+        const delBtn = document.createElement("button");
+        delBtn.textContent = "Delete";
+        delBtn.className = "delete-btn";
+        delBtn.addEventListener("click", async () => {
+          if (confirm("Are you sure you want to delete this shift?")) {
+            await deleteDoc(doc(db, "shifts", shift.id));
+            alert("🗑️ Shift deleted!");
+            loadShifts();
+          }
         });
 
         item.appendChild(info);
@@ -133,7 +131,7 @@ async function loadShifts() {
   }
 }
 
-// 🚪 Çıkış işlemi
+// 🚪 Çıkış
 logoutBtn.addEventListener("click", async () => {
   await signOut(auth);
   window.location.replace("login.html");

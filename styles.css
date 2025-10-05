@@ -1,4 +1,4 @@
-﻿/* Genel sayfa stili */
+﻿/* 🌐 GENEL SAYFA STİLİ */
 body {
   font-family: Arial, sans-serif;
   background-color: #f4f6f9;
@@ -9,7 +9,7 @@ body {
   margin: 0;
 }
 
-/* Login & Register container */
+/* 🔐 Login & Register Container */
 .auth-container {
   background: #fff;
   padding: 2rem;
@@ -64,7 +64,7 @@ body {
   text-decoration: underline;
 }
 
-/* Dashboard (index.html) */
+/* 🖥️ Dashboard */
 .dashboard {
   background: #fff;
   padding: 2rem;
@@ -99,40 +99,7 @@ body {
   background-color: #c1121f;
 }
 
-/* Mobil uyumluluk */
-@media (max-width: 480px) {
-  .auth-container,
-  .dashboard {
-    width: 90%;
-    padding: 1.5rem;
-  }
-}
-.shift-form {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-  margin-bottom: 1.5rem;
-}
-
-.shift-form input,
-.shift-form select {
-  padding: 0.6rem;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-}
-
-#shift-list {
-  text-align: left;
-  padding-left: 0;
-  list-style: none;
-}
-
-#shift-list li {
-  background: #f8f9fa;
-  margin-bottom: 6px;
-  padding: 8px 10px;
-  border-radius: 6px;
-}
+/* 🟢 Shift Planner Butonu */
 #planner-btn {
   background-color: #198754;
   color: white;
@@ -148,29 +115,82 @@ body {
 #planner-btn:hover {
   background-color: #157347;
 }
+
+/* 📅 Shift Planner Sayfası */
+.shift-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 1.5rem;
+}
+
+.shift-form input,
+.shift-form select {
+  padding: 0.6rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+/* 🧾 Vardiya Listesi */
+#shift-list {
+  text-align: left;
+  padding-left: 0;
+  list-style: none;
+}
+
 #shift-list li {
   background: #f8f9fa;
-  margin-bottom: 6px;
-  padding: 8px 10px;
+  margin-bottom: 8px;
+  padding: 10px 12px;
   border-radius: 6px;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
-.edit-btn {
-  margin-left: 10px;
-  background: #ffc107;
-  color: black;
+
+/* ✏️ Edit & 🗑️ Delete Butonları */
+.edit-btn,
+.delete-btn {
+  margin-left: 8px;
+  padding: 6px 10px;
+  font-size: 0.9rem;
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  transition: transform 0.1s ease-in;
+}
+
+.edit-btn {
+  background: #ffc107;
+  color: #000;
 }
 
 .delete-btn {
-  margin-left: 10px;
   background: #dc3545;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
+  color: #fff;
+}
+
+.edit-btn:hover,
+.delete-btn:hover {
+  transform: scale(1.05);
+}
+
+/* 📱 Mobil Uyumluluk */
+@media (max-width: 480px) {
+  .auth-container,
+  .dashboard {
+    width: 90%;
+    padding: 1.5rem;
+  }
+
+  #shift-list li {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .edit-btn,
+  .delete-btn {
+    width: 100%;
+  }
 }
