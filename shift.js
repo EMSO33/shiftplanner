@@ -1,6 +1,6 @@
 import { auth, db } from "./firebase.js";
 import { 
-  collection, addDoc, query, where, getDocs, deleteDoc 
+  collection, addDoc, query, where, getDocs, deleteDoc, doc 
 } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
 import { 
   onAuthStateChanged, signOut 
@@ -33,21 +33,19 @@ addShiftBtn.addEventListener("click", async () => {
   }
 
   try {
-    // Firestore'a vardiya ekle
     await addDoc(collection(db, "shifts"), {
       uid: currentUser.uid,
       date: shiftDate.value,
       type: shiftType.value,
       note: shiftNote.value || "",
-      createdAt: new Date().toISOString(),
+      createdAt: new Date().toISOString()
     });
-
     alert("✅ Shift added!");
     shiftDate.value = "";
     shiftNote.value = "";
     loadShifts();
   } catch (error) {
-    console.error("Error adding shift:", error);
+    console.error(error);
     alert("❌ Error adding shift: " + error.message);
   }
 });
@@ -68,24 +66,22 @@ async function loadShifts() {
     if (querySnapshot.empty) {
       shiftList.innerHTML = "<li>No shifts yet.</li>";
     } else {
-      // Vardiyaları tarihe göre sırala
       const shifts = [];
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        shifts.push({ id: doc.id, ...data });
+      querySnapshot.forEach((docSnap) => {
+        shifts.push({ id: docSnap.id, ...docSnap.data() });
       });
 
+      // Tarihe göre sırala (string to date)
       shifts.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-      // Her vardiyayı listele
-      shifts.forEach((data) => {
+      shifts.forEach((shift) => {
         const item = document.createElement("li");
 
         // Vardiya bilgisi
         const info = document.createElement("span");
-        info.textContent = `${data.date} - ${data.type} (${data.note})`;
+        info.textContent = `${shift.date} - ${shift.type} (${shift.note})`;
 
-        // 🗑️ Silme butonu
+        // 🗑️ Sil butonu
         const delBtn = document.createElement("button");
         delBtn.textContent = "Delete";
         delBtn.style.marginLeft = "10px";
@@ -98,8 +94,8 @@ async function loadShifts() {
         delBtn.addEventListener("click", async () => {
           if (confirm("Are you sure you want to delete this shift?")) {
             try {
-              const docRef = doc.ref;
-              await deleteDoc(doc(db, "shifts", data.id));
+              const shiftRef = doc(db, "shifts", shift.id);
+              await deleteDoc(shiftRef);
               alert("🗑️ Shift deleted!");
               loadShifts();
             } catch (err) {
@@ -115,7 +111,7 @@ async function loadShifts() {
       });
     }
   } catch (error) {
-    console.error("Error loading shifts:", error);
+    console.error(error);
     alert("❌ Error loading shifts: " + error.message);
   }
 }
