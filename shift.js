@@ -1,9 +1,17 @@
 import { auth, db } from "./firebase.js";
 import {
-  collection, addDoc, query, where, getDocs, deleteDoc, doc, updateDoc
+  collection,
+  addDoc,
+  query,
+  where,
+  getDocs,
+  deleteDoc,
+  doc,
+  updateDoc
 } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
 import {
-  onAuthStateChanged, signOut
+  onAuthStateChanged,
+  signOut
 } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
 
 const shiftDate = document.getElementById("shift-date");
@@ -12,9 +20,10 @@ const shiftNote = document.getElementById("shift-note");
 const addShiftBtn = document.getElementById("add-shift");
 const shiftList = document.getElementById("shift-list");
 const logoutBtn = document.getElementById("logout-btn");
+const calendarBtn = document.getElementById("calendar-btn");
 
 let currentUser = null;
-let editShiftId = null; // düzenlenecek vardiya ID’si
+let editShiftId = null;
 
 // 🔐 Kullanıcı oturumunu dinle
 onAuthStateChanged(auth, async (user) => {
@@ -113,12 +122,18 @@ async function loadShifts() {
         delBtn.className = "delete-btn";
         delBtn.addEventListener("click", async () => {
           if (confirm("Are you sure you want to delete this shift?")) {
-            await deleteDoc(doc(db, "shifts", shift.id));
-            alert("🗑️ Shift deleted!");
-            loadShifts();
+            try {
+              await deleteDoc(doc(db, "shifts", shift.id));
+              alert("🗑️ Shift deleted!");
+              loadShifts();
+            } catch (err) {
+              console.error(err);
+              alert("❌ Error deleting shift: " + err.message);
+            }
           }
         });
 
+        // Listeye ekle
         item.appendChild(info);
         item.appendChild(editBtn);
         item.appendChild(delBtn);
@@ -136,3 +151,10 @@ logoutBtn.addEventListener("click", async () => {
   await signOut(auth);
   window.location.replace("login.html");
 });
+
+// 📆 Takvim sayfasına yönlendirme
+if (calendarBtn) {
+  calendarBtn.addEventListener("click", () => {
+    window.location.href = "shift-calendar.html";
+  });
+}
