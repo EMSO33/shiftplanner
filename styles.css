@@ -157,3 +157,20 @@ body {
   justify-content: space-between;
   align-items: center;
 }
+.edit-btn {
+  margin-left: 10px;
+  background: #ffc107;
+  color: black;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.delete-btn {
+  margin-left: 10px;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}

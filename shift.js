@@ -1,6 +1,6 @@
 import { auth, db } from "./firebase.js";
 import { 
-  collection, addDoc, query, where, getDocs, deleteDoc, doc 
+  collection, addDoc, query, where, getDocs, deleteDoc, doc, updateDoc 
 } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
 import { 
   onAuthStateChanged, signOut 
@@ -14,6 +14,7 @@ const shiftList = document.getElementById("shift-list");
 const logoutBtn = document.getElementById("logout-btn");
 
 let currentUser = null;
+let editShiftId = null; // ✏️ düzenleme için geçici ID
 
 // 🔐 Kullanıcı oturumunu dinle
 onAuthStateChanged(auth, async (user) => {
@@ -25,7 +26,7 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-// ➕ Vardiya ekle
+// ➕ veya ✏️ Vardiya ekle/güncelle
 addShiftBtn.addEventListener("click", async () => {
   if (!shiftDate.value || !shiftType.value) {
     alert("⚠️ Please fill in date and type.");
@@ -33,20 +34,35 @@ addShiftBtn.addEventListener("click", async () => {
   }
 
   try {
-    await addDoc(collection(db, "shifts"), {
-      uid: currentUser.uid,
-      date: shiftDate.value,
-      type: shiftType.value,
-      note: shiftNote.value || "",
-      createdAt: new Date().toISOString()
-    });
-    alert("✅ Shift added!");
+    if (editShiftId) {
+      // 🔄 Güncelleme işlemi
+      const shiftRef = doc(db, "shifts", editShiftId);
+      await updateDoc(shiftRef, {
+        date: shiftDate.value,
+        type: shiftType.value,
+        note: shiftNote.value || "",
+      });
+      alert("✅ Shift updated!");
+      editShiftId = null;
+      addShiftBtn.textContent = "Add Shift";
+    } else {
+      // ➕ Yeni vardiya ekleme
+      await addDoc(collection(db, "shifts"), {
+        uid: currentUser.uid,
+        date: shiftDate.value,
+        type: shiftType.value,
+        note: shiftNote.value || "",
+        createdAt: new Date().toISOString()
+      });
+      alert("✅ Shift added!");
+    }
+
     shiftDate.value = "";
     shiftNote.value = "";
     loadShifts();
   } catch (error) {
     console.error(error);
-    alert("❌ Error adding shift: " + error.message);
+    alert("❌ Error saving shift: " + error.message);
   }
 });
 
@@ -71,41 +87,42 @@ async function loadShifts() {
         shifts.push({ id: docSnap.id, ...docSnap.data() });
       });
 
-      // Tarihe göre sırala
       shifts.sort((a, b) => new Date(a.date) - new Date(b.date));
 
       shifts.forEach((shift) => {
         const item = document.createElement("li");
 
-        // Vardiya bilgisi
         const info = document.createElement("span");
         info.textContent = `${shift.date} - ${shift.type} (${shift.note})`;
 
         // 🗑️ Sil butonu
         const delBtn = document.createElement("button");
         delBtn.textContent = "Delete";
-        delBtn.style.marginLeft = "10px";
-        delBtn.style.background = "#dc3545";
-        delBtn.style.color = "white";
-        delBtn.style.border = "none";
-        delBtn.style.borderRadius = "4px";
-        delBtn.style.cursor = "pointer";
+        delBtn.className = "delete-btn";
 
         delBtn.addEventListener("click", async () => {
           if (confirm("Are you sure you want to delete this shift?")) {
-            try {
-              const shiftRef = doc(db, "shifts", shift.id);
-              await deleteDoc(shiftRef);
-              alert("🗑️ Shift deleted!");
-              loadShifts();
-            } catch (err) {
-              console.error(err);
-              alert("❌ Error deleting shift: " + err.message);
-            }
+            await deleteDoc(doc(db, "shifts", shift.id));
+            alert("🗑️ Shift deleted!");
+            loadShifts();
           }
         });
 
+        // ✏️ Düzenle butonu
+        const editBtn = document.createElement("button");
+        editBtn.textContent = "Edit";
+        editBtn.className = "edit-btn";
+
+        editBtn.addEventListener("click", () => {
+          shiftDate.value = shift.date;
+          shiftType.value = shift.type;
+          shiftNote.value = shift.note;
+          editShiftId = shift.id;
+          addShiftBtn.textContent = "Update Shift";
+        });
+
         item.appendChild(info);
+        item.appendChild(editBtn);
         item.appendChild(delBtn);
         shiftList.appendChild(item);
       });
