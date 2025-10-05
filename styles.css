@@ -74,7 +74,7 @@ body {
 .button-group {
   display: flex;
   flex-direction: column;
-  gap: 12px;            /* 👉 tüm butonlar arası eşit boşluk */
+  gap: 12px;
   margin-top: 10px;
 }
 
@@ -87,7 +87,7 @@ body {
   transition: background-color 0.3s, transform 0.1s ease-in;
   color: white;
   width: 100%;
-  margin: 0;            /* 👉 her buton için ekstra margin yok */
+  margin: 0;
 }
 
 .button-group button:hover {
@@ -128,9 +128,13 @@ body {
   padding-left: 0;
   list-style: none;
   width: 100%;
-  max-height: 300px;
-  overflow-y: auto;
+  max-height: 400px;              /* ✅ scroll aktif */
+  overflow-y: auto;               /* ✅ kaydırma */
+  overflow-x: hidden;
   margin: 0;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fff;
 }
 
 /* ✅ Shift List Eleman Düzeni */
@@ -141,21 +145,20 @@ body {
   border-radius: 6px;
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
-  flex-wrap: nowrap; /* ❗ Taşma olmasın */
-  overflow: hidden;
-  word-wrap: break-word;
-  text-overflow: ellipsis;
+  flex-wrap: wrap;                /* ✅ taşma engeli */
+  word-break: break-word;
+  white-space: normal;            /* ✅ 3 nokta yok */
 }
 
-/* 🧩 EKLENDİ: metinlerin sığması için */
+/* 🧩 Shift metinleri tam görünür */
 #shift-list li > span {
-  flex: 1;
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  flex: 1 1 100%;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+  line-height: 1.4;
 }
 
 /* ✏️ Edit & 🗑️ Delete Butonları */
@@ -168,7 +171,7 @@ body {
   border-radius: 4px;
   cursor: pointer;
   transition: transform 0.1s ease-in;
-  flex-shrink: 0; /* Butonlar küçülmesin */
+  flex-shrink: 0;
 }
 
 .edit-btn { background: #ffc107; color: #000; }
@@ -253,7 +256,7 @@ body {
     flex-direction: column;
     align-items: flex-start;
     gap: 6px;
-    flex-wrap: wrap; /* dar alanda alt satıra geçsin */
+    flex-wrap: wrap;
   }
 
   #shift-list li > span {
@@ -273,7 +276,7 @@ body {
 
 /* 🛠 Edit Shift modal form alanları taşmasın */
 .fc-popover .fc-popover-body {
-  overflow-x: hidden !important; /* yatay taşmayı kes */
+  overflow-x: hidden !important;
 }
 
 .fc-popover input[type="date"],
@@ -292,14 +295,13 @@ body {
   width: 100% !important;
   max-width: 100% !important;
   box-sizing: border-box !important;
-  padding: 5px 8px;   /* ✅ doğru sıra */
+  padding: 5px 8px;
   margin: 6px 0 10px;
   border: 1px solid #ccc;
   border-radius: 6px;
   font-size: 14px;
 }
 
-/* Etiket + alan dikey yığılma ve eşit boşluk */
 .fc-popover .form-row,
 #event-modal .form-row,
 .event-modal .form-row {
@@ -308,7 +310,6 @@ body {
   gap: 8px;
 }
 
-/* Başlıklar/etiketler satır kırmasın diye */
 .fc-popover label,
 #event-modal label,
 .event-modal label {
@@ -319,7 +320,6 @@ body {
   word-break: break-word;
 }
 
-/* Modal içi butonlar hizalı ve taşmadan sığsın */
 .fc-popover .modal-actions,
 #event-modal .modal-actions,
 .event-modal .modal-actions {
@@ -332,10 +332,9 @@ body {
 .fc-popover .modal-actions button,
 #event-modal .modal-actions button,
 .event-modal .modal-actions button {
-  flex: 1 1 120px; /* dar alanda kırılabilsin */
+  flex: 1 1 120px;
 }
 
-/* ✅ Modal (Edit Shift) düzeltmesi */
 .fc-popover, .fc-popover .fc-popover-body {
   max-width: 90vw !important;
   width: auto !important;
