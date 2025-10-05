@@ -1,103 +1,142 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Shift Calendar - ShiftPilot</title>
-  <link rel="stylesheet" href="styles.css" />
-  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.9/index.global.min.css" rel="stylesheet" />
-  <style>
-    #calendar {
-      max-width: 100%;
-      margin: 20px auto;
-      background: white;
-      border-radius: 12px;
-      padding: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    body {
-      background: #f4f6f9;
-    }
-  </style>
-</head>
-<body>
-  <div class="dashboard">
-    <h1>🗓️ Shift Calendar</h1>
-    <div id="calendar"></div>
-    <button id="back-btn">⬅️ Back to Planner</button>
-  </div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shift Calendar - ShiftPilot</title>
 
-  <!-- 🔹 Firebase ve FullCalendar script'leri -->
-  <script type="module">
-    import { auth, db } from "./firebase.js";
-    import {
-      onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
-    import {
-      collection, query, where, getDocs, addDoc
-    } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
-    import { Calendar } from "https://cdn.jsdelivr.net/npm/fullcalendar@6.1.9/index.global.min.js";
+    <!-- ✅ FullCalendar CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.9/main.min.css"
+      rel="stylesheet"
+    />
 
-    const calendarEl = document.getElementById("calendar");
-    const backBtn = document.getElementById("back-btn");
-    let currentUser = null;
+    <link rel="stylesheet" href="styles.css" />
 
-    // 🔐 Kullanıcı oturum kontrolü
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        currentUser = user;
-        loadCalendar();
-      } else {
-        window.location.replace("login.html");
+    <style>
+      body {
+        background-color: #f4f6f9;
       }
-    });
+      #calendar {
+        max-width: 900px;
+        margin: 40px auto;
+        background: white;
+        padding: 10px;
+        border-radius: 12px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+      #back-btn {
+        display: block;
+        margin: 20px auto;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 1rem;
+      }
+      #back-btn:hover {
+        background-color: #0056b3;
+      }
+    </style>
+  </head>
 
-    async function loadCalendar() {
-      const q = query(collection(db, "shifts"), where("uid", "==", currentUser.uid));
-      const querySnapshot = await getDocs(q);
-      const events = [];
+  <body>
+    <div class="dashboard">
+      <h1>🗓️ Shift Calendar</h1>
+      <div id="calendar"></div>
+      <button id="back-btn">⬅️ Back to Planner</button>
+    </div>
 
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        events.push({
-          title: data.type,
-          start: data.date,
-          extendedProps: { note: data.note }
-        });
-      });
+    <!-- ✅ FullCalendar JS -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.9/main.min.js"></script>
 
-      // 🗓️ FullCalendar başlat
-      const calendar = new Calendar(calendarEl, {
-        initialView: "dayGridMonth",
-        height: 650,
-        selectable: true,
-        events,
-        dateClick: async (info) => {
-          const shiftType = prompt("Enter shift type (Morning/Evening/Night):");
-          if (shiftType) {
-            await addDoc(collection(db, "shifts"), {
-              uid: currentUser.uid,
-              date: info.dateStr,
-              type: shiftType,
-              note: "",
-              createdAt: new Date().toISOString(),
-            });
-            alert("✅ Shift added!");
-            calendar.addEvent({ title: shiftType, start: info.dateStr });
-          }
-        },
-        eventClick: (info) => {
-          alert(`📅 ${info.event.title}\n📝 ${info.event.extendedProps.note || "No notes"}`);
+    <!-- ✅ Firebase ve uygulama kodu -->
+    <script type="module">
+      import { auth, db } from "./firebase.js";
+      import {
+        onAuthStateChanged,
+      } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
+      import {
+        collection,
+        query,
+        where,
+        getDocs,
+        addDoc,
+      } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+
+      const calendarEl = document.getElementById("calendar");
+      const backBtn = document.getElementById("back-btn");
+      let currentUser = null;
+
+      // 🔐 Oturum kontrolü
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          currentUser = user;
+          await renderCalendar();
+        } else {
+          window.location.replace("login.html");
         }
       });
 
-      calendar.render();
-    }
+      async function renderCalendar() {
+        const q = query(
+          collection(db, "shifts"),
+          where("uid", "==", currentUser.uid)
+        );
+        const querySnapshot = await getDocs(q);
+        const events = [];
 
-    // 🔙 Planner sayfasına dönüş
-    backBtn.addEventListener("click", () => {
-      window.location.href = "shift.html";
-    });
-  </script>
-</body>
+        querySnapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          events.push({
+            title: `${data.type}`,
+            start: data.date,
+            extendedProps: { note: data.note || "" },
+          });
+        });
+
+        // ✅ FullCalendar başlat
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+          initialView: "dayGridMonth",
+          height: 650,
+          selectable: true,
+          events: events,
+          dateClick: async function (info) {
+            const shiftType = prompt(
+              "Enter shift type (Morning/Evening/Night):"
+            );
+            if (shiftType) {
+              await addDoc(collection(db, "shifts"), {
+                uid: currentUser.uid,
+                date: info.dateStr,
+                type: shiftType,
+                note: "",
+                createdAt: new Date().toISOString(),
+              });
+              alert("✅ Shift added!");
+              calendar.addEvent({
+                title: shiftType,
+                start: info.dateStr,
+              });
+            }
+          },
+          eventClick: function (info) {
+            alert(
+              `📅 ${info.event.title}\n📝 ${
+                info.event.extendedProps.note || "No notes"
+              }`
+            );
+          },
+        });
+
+        calendar.render();
+      }
+
+      backBtn.addEventListener("click", () => {
+        window.location.href = "shift.html";
+      });
+    </script>
+  </body>
 </html>
