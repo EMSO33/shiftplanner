@@ -74,11 +74,10 @@ body {
 .button-group {
   display: flex;
   flex-direction: column;
-  gap: 12px; /* 👉 tüm butonlar arası eşit boşluk */
+  gap: 12px;            /* 👉 tüm butonlar arası eşit boşluk */
   margin-top: 10px;
 }
 
-/* 🎨 Tüm butonlar */
 .button-group button {
   padding: 0.8rem 1rem;
   font-size: 1rem;
@@ -88,43 +87,103 @@ body {
   transition: background-color 0.3s, transform 0.1s ease-in;
   color: white;
   width: 100%;
+  margin: 0;            /* 👉 her buton için ekstra margin yok */
 }
 
 .button-group button:hover {
   transform: scale(1.03);
 }
 
-/* 🟢 Planner */
-#planner-btn {
-  background-color: #198754;
-}
-#planner-btn:hover {
-  background-color: #157347;
+/* 🎨 Renk temaları */
+#planner-btn { background-color: #198754; }
+#planner-btn:hover { background-color: #157347; }
+
+#calendar-btn { background-color: #0d6efd; }
+#calendar-btn:hover { background-color: #0b5ed7; }
+
+#stats-btn { background-color: #fd7e14; }
+#stats-btn:hover { background-color: #e76f00; }
+
+#logout-btn { background-color: #e63946; }
+#logout-btn:hover { background-color: #c1121f; }
+
+/* 📅 Shift Planner Sayfası */
+.shift-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 1.5rem;
 }
 
-/* 📅 Calendar */
-#calendar-btn {
-  background-color: #0d6efd;
-}
-#calendar-btn:hover {
-  background-color: #0b5ed7;
-}
-
-/* 📊 Stats */
-#stats-btn {
-  background-color: #fd7e14;
-}
-#stats-btn:hover {
-  background-color: #e76f00;
+.shift-form input,
+.shift-form select {
+  padding: 0.6rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
 }
 
-/* 🔴 Logout */
-#logout-btn {
-  background-color: #e63946;
+/* 🧾 Vardiya Listesi */
+#shift-list {
+  text-align: left;
+  padding-left: 0;
+  list-style: none;
+  width: 100%;          /* 👉 kart genişliğini doldursun */
+  max-height: 300px;    /* 👉 çok olursa kutu içinde kaydır */
+  overflow-y: auto;
+  margin: 0;
 }
-#logout-btn:hover {
-  background-color: #c1121f;
+
+#shift-list li {
+  background: #f8f9fa;
+  margin-bottom: 8px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  word-wrap: break-word; /* uzun notları kır */
 }
+
+/* ✏️ Edit & 🗑️ Delete Butonları */
+.edit-btn,
+.delete-btn {
+  margin-left: 8px;
+  padding: 6px 10px;
+  font-size: 0.9rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: transform 0.1s ease-in;
+}
+
+.edit-btn { background: #ffc107; color: #000; }
+.delete-btn { background: #dc3545; color: #fff; }
+
+.edit-btn:hover,
+.delete-btn:hover { transform: scale(1.05); }
+
+/* 🗓️ FullCalendar kapsayıcıları (takvim sayfası) */
+#calendar {
+  max-width: 100%;
+  margin: 20px auto;
+  background: white;
+  border-radius: 12px;
+  padding: 10px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+#back-btn {
+  margin-top: 20px;
+  padding: 0.6rem 1rem;
+  border: none;
+  background-color: #007bff;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+#back-btn:hover { background-color: #0056b3; }
 
 /* 📱 Mobil Uyumluluk */
 @media (max-width: 480px) {
@@ -132,6 +191,17 @@ body {
   .dashboard {
     width: 90%;
     padding: 1.5rem;
+  }
+
+  #shift-list li {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .edit-btn,
+  .delete-btn {
+    width: 100%;
   }
 
   .button-group button {
