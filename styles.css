@@ -133,3 +133,18 @@ body {
   padding: 8px 10px;
   border-radius: 6px;
 }
+#planner-btn {
+  background-color: #198754;
+  color: white;
+  border: none;
+  padding: 0.7rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s;
+}
+
+#planner-btn:hover {
+  background-color: #157347;
+}

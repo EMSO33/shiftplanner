@@ -1,15 +1,19 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ShiftPilot Dashboard</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <div class="dashboard">
     <h1>ShiftPilot Dashboard</h1>
     <p id="welcome-text">Loading user info...</p>
+
+    <!-- 🔹 Yeni buton -->
+    <button id="planner-btn">Go to Shift Planner</button>
+
     <button id="logout-btn">Logout</button>
   </div>
 
@@ -20,22 +24,27 @@
 
     const welcomeText = document.getElementById("welcome-text");
     const logoutBtn = document.getElementById("logout-btn");
+    const plannerBtn = document.getElementById("planner-btn");
 
-    // Kullanıcı oturum durumunu dinle
+    // Kullanıcı oturum durumunu kontrol et
     onAuthStateChanged(auth, (user) => {
       if (user) {
         welcomeText.textContent = `Welcome, ${user.email} 👋`;
       } else {
-        // Oturum yoksa login sayfasına yönlendir
         window.location.replace("login.html");
       }
     });
 
-    // Çıkış butonu
+    // Logout işlemi
     logoutBtn.addEventListener("click", async () => {
       await signOut(auth);
       alert("👋 Logged out successfully!");
       window.location.replace("login.html");
+    });
+
+    // Yeni buton: Shift Planner'a git
+    plannerBtn.addEventListener("click", () => {
+      window.location.href = "shift.html";
     });
   </script>
 </body>
