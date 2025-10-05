@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shift Calendar - ShiftPilot</title>
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.9/index.global.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="dashboard">
+    <h1>🗓️ Shift Calendar</h1>
+    <div id="calendar"></div>
+    <button id="back-btn">⬅️ Back to Planner</button>
+  </div>
+
+  <script type="module">
+    import { auth, db } from "./firebase.js";
+    import {
+      onAuthStateChanged, signOut
+    } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
+    import {
+      collection, query, where, getDocs, addDoc
+    } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+
+    import { Calendar } from "https://cdn.jsdelivr.net/npm/fullcalendar@6.1.9/index.global.min.js";
+
+    const calendarEl = document.getElementById("calendar");
+    const backBtn = document.getElementById("back-btn");
+
+    let currentUser = null;
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        currentUser = user;
+        loadCalendar();
+      } else {
+        window.location.replace("login.html");
+      }
+    });
+
+    async function loadCalendar() {
+      const q = query(collection(db, "shifts"), where("uid", "==", currentUser.uid));
+      const querySnapshot = await getDocs(q);
+      const events = [];
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        events.push({
+          title: data.type,
+          start: data.date,
+          extendedProps: { note: data.note }
+        });
+      });
+
+      const calendar = new Calendar(calendarEl, {
+        initialView: "dayGridMonth",
+        height: 650,
+        selectable: true,
+        events,
+        dateClick: async (info) => {
+          const shiftType = prompt("Enter shift type (Morning/Evening/Night):");
+          if (shiftType) {
+            await addDoc(collection(db, "shifts"), {
+              uid: currentUser.uid,
+              date: info.dateStr,
+              type: shiftType,
+              note: "",
+              createdAt: new Date().toISOString(),
+            });
+            alert("✅ Shift added!");
+            calendar.addEvent({ title: shiftType, start: info.dateStr });
+          }
+        },
+        eventClick: (info) => {
+          alert(`📅 ${info.event.title}\n📝 ${info.event.extendedProps.note || "No notes"}`);
+        }
+      });
+
+      calendar.render();
+    }
+
+    backBtn.addEventListener("click", () => {
+      window.location.href = "shift.html";
+    });
+  </script>
+</body>
+</html>
