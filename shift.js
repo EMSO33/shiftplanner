@@ -1,6 +1,6 @@
 import { auth, db } from "./firebase.js";
 import { 
-  collection, addDoc, query, where, getDocs, orderBy 
+  collection, addDoc, query, where, getDocs, orderBy, deleteDoc 
 } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
 import { 
   onAuthStateChanged, signOut 
@@ -15,7 +15,7 @@ const logoutBtn = document.getElementById("logout-btn");
 
 let currentUser = null;
 
-// Kullanıcı oturumunu dinle
+// 🔐 Kullanıcı oturumunu dinle
 onAuthStateChanged(auth, async (user) => {
   if (user) {
     currentUser = user;
@@ -25,7 +25,7 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-// Vardiya ekle
+// ➕ Vardiya ekle
 addShiftBtn.addEventListener("click", async () => {
   if (!shiftDate.value || !shiftType.value) {
     alert("⚠️ Please fill in date and type.");
@@ -50,7 +50,7 @@ addShiftBtn.addEventListener("click", async () => {
   }
 });
 
-// Vardiyaları getir
+// 📅 Vardiyaları getir ve listele
 async function loadShifts() {
   shiftList.innerHTML = "<li>Loading...</li>";
 
@@ -69,13 +69,42 @@ async function loadShifts() {
     querySnapshot.forEach((doc) => {
       const data = doc.data();
       const item = document.createElement("li");
-      item.textContent = `${data.date} - ${data.type} (${data.note})`;
+
+      // Vardiya bilgisi
+      const info = document.createElement("span");
+      info.textContent = `${data.date} - ${data.type} (${data.note})`;
+
+      // 🗑️ Silme butonu
+      const delBtn = document.createElement("button");
+      delBtn.textContent = "Delete";
+      delBtn.style.marginLeft = "10px";
+      delBtn.style.background = "#dc3545";
+      delBtn.style.color = "white";
+      delBtn.style.border = "none";
+      delBtn.style.borderRadius = "4px";
+      delBtn.style.cursor = "pointer";
+
+      delBtn.addEventListener("click", async () => {
+        if (confirm("Are you sure you want to delete this shift?")) {
+          try {
+            await deleteDoc(doc.ref);
+            alert("🗑️ Shift deleted!");
+            loadShifts();
+          } catch (err) {
+            console.error(err);
+            alert("❌ Error deleting shift: " + err.message);
+          }
+        }
+      });
+
+      item.appendChild(info);
+      item.appendChild(delBtn);
       shiftList.appendChild(item);
     });
   }
 }
 
-// Çıkış
+// 🚪 Çıkış işlemi
 logoutBtn.addEventListener("click", async () => {
   await signOut(auth);
   window.location.replace("login.html");

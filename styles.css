@@ -148,3 +148,12 @@ body {
 #planner-btn:hover {
   background-color: #157347;
 }
+#shift-list li {
+  background: #f8f9fa;
+  margin-bottom: 6px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
