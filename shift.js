@@ -71,7 +71,7 @@ async function loadShifts() {
         shifts.push({ id: docSnap.id, ...docSnap.data() });
       });
 
-      // Tarihe göre sırala (string to date)
+      // Tarihe göre sırala
       shifts.sort((a, b) => new Date(a.date) - new Date(b.date));
 
       shifts.forEach((shift) => {
