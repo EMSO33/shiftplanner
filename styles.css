@@ -144,14 +144,18 @@ body {
   align-items: center;
   gap: 8px;
   flex-wrap: nowrap; /* ❗ Taşma olmasın */
+  overflow: hidden;
+  word-wrap: break-word;
+  text-overflow: ellipsis;
 }
 
+/* 🧩 EKLENDİ: metinlerin sığması için */
 #shift-list li > span {
   flex: 1;
+  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-right: 8px;
 }
 
 /* ✏️ Edit & 🗑️ Delete Butonları */
@@ -266,6 +270,7 @@ body {
     font-size: 0.95rem;
   }
 }
+
 /* 🛠 Edit Shift modal form alanları taşmasın */
 .fc-popover .fc-popover-body {
   overflow-x: hidden !important; /* yatay taşmayı kes */
@@ -329,6 +334,7 @@ body {
 .event-modal .modal-actions button {
   flex: 1 1 120px; /* dar alanda kırılabilsin */
 }
+
 /* ✅ Modal (Edit Shift) düzeltmesi */
 .fc-popover, .fc-popover .fc-popover-body {
   max-width: 90vw !important;
