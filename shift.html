@@ -26,21 +26,15 @@
     <h3>My Shifts</h3>
     <ul id="shift-list"></ul>
 
-    <!-- 🔹 Takvim butonu -->
-    <button id="calendar-btn">🗓️ View Calendar</button>
-
-    <!-- 🔹 Çıkış -->
-    <button id="logout-btn">Logout</button>
+    <!-- 🔹 Alt Butonlar -->
+    <div class="button-group">
+      <button id="calendar-btn">🗓️ View Calendar</button>
+      <button id="stats-btn">📊 View Stats</button>
+      <button id="logout-btn">Logout</button>
+    </div>
   </div>
 
   <script type="module" src="firebase.js"></script>
   <script type="module" src="shift.js"></script>
-
-  <!-- 📅 Takvim butonunun yönlendirme script'i -->
-  <script>
-    document.getElementById("calendar-btn").addEventListener("click", () => {
-      window.location.href = "shift-calendar.html";
-    });
-  </script>
 </body>
 </html>

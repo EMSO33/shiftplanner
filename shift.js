@@ -21,9 +21,10 @@ const addShiftBtn = document.getElementById("add-shift");
 const shiftList = document.getElementById("shift-list");
 const logoutBtn = document.getElementById("logout-btn");
 const calendarBtn = document.getElementById("calendar-btn");
+const statsBtn = document.getElementById("stats-btn");
 
 let currentUser = null;
-let editShiftId = null; // düzenlenecek vardiya ID’si
+let editShiftId = null;
 
 // 🔐 Kullanıcı oturumunu dinle
 onAuthStateChanged(auth, async (user) => {
@@ -44,7 +45,6 @@ addShiftBtn.addEventListener("click", async () => {
 
   try {
     if (editShiftId) {
-      // 🔄 Güncelleme
       const shiftRef = doc(db, "shifts", editShiftId);
       await updateDoc(shiftRef, {
         date: shiftDate.value,
@@ -55,7 +55,6 @@ addShiftBtn.addEventListener("click", async () => {
       editShiftId = null;
       addShiftBtn.textContent = "Add Shift";
     } else {
-      // ➕ Yeni ekleme
       await addDoc(collection(db, "shifts"), {
         uid: currentUser.uid,
         date: shiftDate.value,
@@ -94,26 +93,22 @@ async function loadShifts() {
       shifts.push({ id: docSnap.id, ...docSnap.data() });
     });
 
-    // 📆 Tarihe göre sırala
     shifts.sort((a, b) => new Date(a.date) - new Date(b.date));
 
     shifts.forEach((shift) => {
       const item = document.createElement("li");
       item.classList.add("shift-item");
 
-      // 🔹 Renkli gösterim
       let color = "#6c757d";
       if (shift.type === "Morning") color = "#28a745";
       else if (shift.type === "Evening") color = "#fd7e14";
       else if (shift.type === "Night") color = "#007bff";
 
-      // 📋 Vardiya bilgisi
       const info = document.createElement("span");
       info.textContent = `${shift.date} - ${shift.type} (${shift.note || ""})`;
       info.style.color = color;
       info.style.fontWeight = "500";
 
-      // ✏️ Edit butonu
       const editBtn = document.createElement("button");
       editBtn.textContent = "Edit";
       editBtn.className = "edit-btn";
@@ -126,7 +121,6 @@ async function loadShifts() {
         alert("📝 Editing mode activated");
       });
 
-      // 🗑️ Delete butonu
       const delBtn = document.createElement("button");
       delBtn.textContent = "Delete";
       delBtn.className = "delete-btn";
@@ -143,7 +137,6 @@ async function loadShifts() {
         }
       });
 
-      // 📋 Listeye ekle
       item.appendChild(info);
       item.appendChild(editBtn);
       item.appendChild(delBtn);
@@ -165,5 +158,12 @@ logoutBtn.addEventListener("click", async () => {
 if (calendarBtn) {
   calendarBtn.addEventListener("click", () => {
     window.location.href = "shift-calendar.html";
+  });
+}
+
+// 📊 İstatistik sayfasına yönlendirme
+if (statsBtn) {
+  statsBtn.addEventListener("click", () => {
+    window.location.href = "shift-stats.html";
   });
 }
