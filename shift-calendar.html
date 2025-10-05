@@ -43,10 +43,8 @@
   <div id="calendar"></div>
   <button id="back-btn">⬅️ Back to Planner</button>
 
-  <!-- ✅ FullCalendar -->
+  <!-- ✅ FullCalendar & Firebase -->
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
-
-  <!-- ✅ Firebase klasik SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
@@ -77,28 +75,21 @@
           return;
         }
 
-        // 🔹 Firestore'dan vardiyaları al
         const snapshot = await db.collection("shifts").where("uid", "==", user.uid).get();
         const events = snapshot.docs.map(doc => {
           const data = doc.data();
-
-          // 🔹 Renk belirleme
-          let color = "#6c757d";
-          if (data.type === "Morning") color = "#28a745"; // yeşil
-          else if (data.type === "Evening") color = "#fd7e14"; // turuncu
-          else if (data.type === "Night") color = "#007bff"; // mavi
-
           return {
+            id: doc.id,
             title: data.type,
             start: data.date,
-            backgroundColor: color,
-            borderColor: color,
-            textColor: "white",
+            color:
+              data.type === "Morning" ? "#198754" :
+              data.type === "Evening" ? "#ffc107" :
+              "#0d6efd",
             extendedProps: { note: data.note || "" }
           };
         });
 
-        // ✅ FullCalendar başlat
         const calendar = new FullCalendar.Calendar(calendarEl, {
           initialView: 'dayGridMonth',
           height: 650,
@@ -106,12 +97,6 @@
           dateClick: async (info) => {
             const shiftType = prompt("Enter shift type (Morning/Evening/Night):");
             if (shiftType) {
-              // 🔹 Renk belirleme
-              let color = "#6c757d";
-              if (shiftType === "Morning") color = "#28a745";
-              else if (shiftType === "Evening") color = "#fd7e14";
-              else if (shiftType === "Night") color = "#007bff";
-
               await db.collection("shifts").add({
                 uid: user.uid,
                 date: info.dateStr,
@@ -123,14 +108,39 @@
               calendar.addEvent({
                 title: shiftType,
                 start: info.dateStr,
-                backgroundColor: color,
-                borderColor: color,
-                textColor: "white"
+                color:
+                  shiftType === "Morning" ? "#198754" :
+                  shiftType === "Evening" ? "#ffc107" :
+                  "#0d6efd",
               });
             }
           },
-          eventClick: (info) => {
-            alert(`📅 ${info.event.title}\n📝 ${info.event.extendedProps.note || "No notes"}`);
+          eventClick: async (info) => {
+            const newType = prompt(
+              `Edit shift (${info.event.title}) or leave blank to delete.\n📝 Note: ${info.event.extendedProps.note || "None"}`,
+              info.event.title
+            );
+
+            if (newType === null) return; // iptal
+            if (newType.trim() === "") {
+              // ❌ Sil
+              if (confirm("Delete this shift?")) {
+                await db.collection("shifts").doc(info.event.id).delete();
+                info.event.remove();
+                alert("🗑️ Shift deleted!");
+              }
+              return;
+            }
+
+            // 🔄 Güncelle
+            await db.collection("shifts").doc(info.event.id).update({ type: newType });
+            info.event.setProp("title", newType);
+            info.event.setProp("color",
+              newType === "Morning" ? "#198754" :
+              newType === "Evening" ? "#ffc107" :
+              "#0d6efd"
+            );
+            alert("✅ Shift updated!");
           }
         });
 
