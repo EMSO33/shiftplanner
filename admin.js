@@ -13,7 +13,7 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 
 // 🔐 Admin Email Tanımı
-const ADMIN_EMAIL = "emircansuleymanoglu@gmail.com"; // sadece admin erişimi
+const ADMIN_EMAIL = "deneme@shiftpilot.com"; // 🔥 Artık bu hesap admin erişimine sahip
 
 // 📋 DOM Elementleri
 const shiftsTable = document.querySelector("#shiftsTable tbody");
