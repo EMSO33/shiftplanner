@@ -12,7 +12,7 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// 📋 DOM Elementleri
+// 📋 DOM
 const shiftsTable = document.querySelector("#shiftsTable tbody");
 const usersTable = document.querySelector("#usersTable tbody");
 const searchShift = document.getElementById("searchShift");
@@ -51,35 +51,29 @@ async function loadShifts() {
     const shift = docSnap.data();
     counts[shift.type] = (counts[shift.type] || 0) + 1;
 
-    let email = shift.userEmail || "N/A";
+    let email = shift.userEmail || null;
 
-    // Eğer userEmail yoksa uid'yi veya tersini bulmaya çalış
+    // ✅ Eğer userEmail yoksa, UID'den bul ve Firestore'a kaydet
     if (!email && shift.uid) {
       try {
         const userRef = await db.collection("users").doc(shift.uid).get();
         if (userRef.exists) {
-          email = userRef.data().email;
+          email = userRef.data().email || "N/A";
+          // Firestore’a geri yaz (bir kereye mahsus düzeltme)
           await db.collection("shifts").doc(docSnap.id).update({ userEmail: email });
+        } else {
+          email = "N/A";
         }
-      } catch (e) {
-        console.warn("⚠️ userEmail lookup by UID failed:", e);
-      }
-    } else if (email && !shift.uid) {
-      // UID eksikse ters arama (email üzerinden users koleksiyonunda bul)
-      try {
-        const q = await db.collection("users").where("email", "==", email).get();
-        if (!q.empty) {
-          const foundUser = q.docs[0].data();
-          await db.collection("shifts").doc(docSnap.id).update({ uid: foundUser.uid });
-        }
-      } catch (e) {
-        console.warn("⚠️ UID lookup by email failed:", e);
+      } catch (err) {
+        console.warn("⚠️ user lookup failed:", err);
+        email = "N/A";
       }
     }
 
+    // 📄 Tabloya yaz
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td>${email}</td>
+      <td>${email || "N/A"}</td>
       <td>${shift.date}</td>
       <td>${shift.type}</td>
       <td>${shift.note || "-"}</td>
@@ -89,7 +83,7 @@ async function loadShifts() {
       </td>
     `;
 
-    // ✏️ Edit
+    // ✏️ Edit butonu
     row.querySelector(".edit-btn").addEventListener("click", async () => {
       const newNote = prompt("Enter new note:", shift.note || "");
       if (newNote === null) return;
@@ -98,7 +92,7 @@ async function loadShifts() {
       loadShifts();
     });
 
-    // 🗑️ Delete
+    // 🗑️ Delete butonu
     row.querySelector(".delete-btn").addEventListener("click", async () => {
       if (confirm("Are you sure you want to delete this shift?")) {
         await db.collection("shifts").doc(docSnap.id).delete();
