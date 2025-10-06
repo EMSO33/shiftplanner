@@ -35,35 +35,30 @@ auth.onAuthStateChanged(async (user) => {
     return;
   }
 
-  try {
-    const userRef = db.collection("users").doc(user.uid);
-    const docSnap = await userRef.get();
+  const userRef = db.collection("users").doc(user.uid);
+  const userDoc = await userRef.get();
 
-    if (!docSnap.exists) {
-      alert("⚠️ User record not found in database!");
-      await auth.signOut();
-      window.location.href = "index.html";
-      return;
-    }
-
-    const userData = docSnap.data();
-
-    if (userData.role !== "admin") {
-      alert("⛔ Access denied. Only admins can view this page!");
-      await auth.signOut();
-      window.location.href = "index.html";
-      return;
-    }
-
-    console.log("✅ Admin verified:", userData.email);
-    loadShifts();
-    loadUsers();
-  } catch (error) {
-    console.error("❌ Role check failed:", error);
-    alert("Error verifying role: " + error.message);
+  if (!userDoc.exists) {
+    alert("⚠️ User record not found in database!");
+    await auth.signOut();
     window.location.href = "index.html";
+    return;
   }
+
+  const userData = userDoc.data();
+
+  if (userData.role !== "admin") {
+    alert("⛔ Access denied. Only admins can view this page!");
+    await auth.signOut();
+    window.location.href = "index.html";
+    return;
+  }
+
+  console.log("✅ Admin verified:", user.email);
+  loadShifts();
+  loadUsers();
 });
+
 
 // 🧾 Shift verilerini getir (userEmail eksikse users koleksiyonundan bul)
 async function loadShifts() {
@@ -88,13 +83,17 @@ async function loadShifts() {
     }
 
     const row = `
-      <tr>
-        <td>${email}</td>
-        <td>${d.date}</td>
-        <td>${d.type}</td>
-        <td>${d.note || "-"}</td>
-        <td>✏️ Edit 🗑️ Delete</td>
-      </tr>`;
+  <tr>
+    <td>${email}</td>
+    <td>${d.date}</td>
+    <td>${d.type}</td>
+    <td>${d.note || "-"}</td>
+    <td>
+      <button class="edit-btn" onclick="editShift('${shiftDoc.id}')">✏️ Edit</button>
+      <button class="delete-btn" onclick="deleteShift('${shiftDoc.id}')">🗑️ Delete</button>
+    </td>
+  </tr>`;
+
     shiftsTable.insertAdjacentHTML("beforeend", row);
   }
 
@@ -137,3 +136,22 @@ document.getElementById("logout-btn").addEventListener("click", async () => {
   await auth.signOut();
   window.location.href = "login.html";
 });
+window.editShift = async function (id) {
+  const shiftRef = db.collection("shifts").doc(id);
+  const shiftDoc = await shiftRef.get();
+  if (!shiftDoc.exists) return alert("Shift not found!");
+  const shift = shiftDoc.data();
+  const newNote = prompt(`Edit note for ${shift.date}:`, shift.note || "");
+  if (newNote !== null) {
+    await shiftRef.update({ note: newNote });
+    alert("✅ Shift updated!");
+    loadShifts();
+  }
+};
+
+window.deleteShift = async function (id) {
+  if (!confirm("Delete this shift?")) return;
+  await db.collection("shifts").doc(id).delete();
+  alert("🗑️ Shift deleted!");
+  loadShifts();
+};
