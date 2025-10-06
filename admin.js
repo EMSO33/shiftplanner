@@ -17,14 +17,12 @@ const shiftsTable = document.querySelector("#shiftsTable tbody");
 const usersTable  = document.querySelector("#usersTable tbody");
 const searchShift = document.getElementById("searchShift");
 
-// 🔄 Sekme geçişi (HTML'deki id kalıbı: tab-*, content-*)
+// 🔄 Sekme geçişi
 document.querySelectorAll("nav button").forEach((btn) => {
   btn.addEventListener("click", (e) => {
-    // aktif buton
     document.querySelectorAll("nav button").forEach((b) => b.classList.remove("active"));
-    e.currentTarget.classList.add("active");
-    // içerikler
     document.querySelectorAll(".tab-content").forEach((c) => c.classList.remove("active"));
+    e.currentTarget.classList.add("active");
     const tabId = e.currentTarget.id.replace("tab-", "content-");
     document.getElementById(tabId)?.classList.add("active");
   });
@@ -32,10 +30,7 @@ document.querySelectorAll("nav button").forEach((btn) => {
 
 // 🔑 Rol tabanlı Auth kontrolü
 auth.onAuthStateChanged(async (user) => {
-  if (!user) {
-    window.location.href = "login.html";
-    return;
-  }
+  if (!user) return (window.location.href = "login.html");
 
   try {
     const userRef  = db.collection("users").doc(user.uid);
@@ -44,19 +39,16 @@ auth.onAuthStateChanged(async (user) => {
     if (!userSnap.exists) {
       alert("⚠️ User record not found in database!");
       await auth.signOut();
-      window.location.href = "index.html";
-      return;
+      return (window.location.href = "index.html");
     }
 
     const userData = userSnap.data();
     if (userData.role !== "admin") {
       alert("⛔ Access denied. Only admins can view this page!");
       await auth.signOut();
-      window.location.href = "index.html";
-      return;
+      return (window.location.href = "index.html");
     }
 
-    // Admin ok → verileri yükle
     await loadShifts();
     await loadUsers();
   } catch (err) {
@@ -66,132 +58,139 @@ auth.onAuthStateChanged(async (user) => {
   }
 });
 
-// 🧩 UID'den email bul (users koleksiyonunda field: uid/email)
+// 🧩 UID'den email bul
 async function emailFromUid(uid) {
   if (!uid) return "N/A";
   try {
     const q = await db.collection("users").where("uid", "==", uid).limit(1).get();
     if (q.empty) return "N/A";
     return q.docs[0].data().email || "N/A";
-  } catch (e) {
-    console.warn("⚠️ emailFromUid lookup failed:", e);
+  } catch {
     return "N/A";
   }
 }
 
-// 🧾 Shift verilerini getir (userEmail yoksa users'tan tamamla)
+// 🧾 Shift verilerini getir
 async function loadShifts() {
-  try {
-    // Tarihe göre sırala (YYYY-MM-DD string old. için leksikografik sıralama çalışır)
-    const snap = await db.collection("shifts").orderBy("date").get();
-    shiftsTable.innerHTML = "";
+  const snap = await db.collection("shifts").orderBy("date").get();
+  shiftsTable.innerHTML = "";
 
-    let counts = { Morning: 0, Evening: 0, Night: 0 };
+  let counts = { Morning: 0, Evening: 0, Night: 0 };
 
-    for (const shiftDoc of snap.docs) {
-      const d = shiftDoc.data();
-      counts[d.type] = (counts[d.type] || 0) + 1;
+  for (const shiftDoc of snap.docs) {
+    const d = shiftDoc.data();
+    counts[d.type] = (counts[d.type] || 0) + 1;
 
-      // email'i tamamla
-      let email = d.userEmail || "N/A";
-      if (email === "N/A") {
-        email = await emailFromUid(d.uid);
-      }
+    let email = d.userEmail || "N/A";
+    if (email === "N/A") email = await emailFromUid(d.uid);
 
-      const row = `
-        <tr>
-          <td>${email}</td>
-          <td>${d.date}</td>
-          <td>${d.type}</td>
-          <td>${d.note || "-"}</td>
-          <td>
-            <button class="edit-btn" onclick="editShift('${shiftDoc.id}')">✏️ Edit</button>
-            <button class="delete-btn" onclick="deleteShift('${shiftDoc.id}')">🗑️ Delete</button>
-          </td>
-        </tr>`;
-      shiftsTable.insertAdjacentHTML("beforeend", row);
-    }
-
-    renderChart(counts);
-  } catch (err) {
-    console.error("❌ loadShifts failed:", err);
-    shiftsTable.innerHTML = `<tr><td colspan="5">Failed to load shifts.</td></tr>`;
+    const row = `
+      <tr>
+        <td>${email}</td>
+        <td>${d.date}</td>
+        <td>${d.type}</td>
+        <td>${d.note || "-"}</td>
+        <td>
+          <button class="edit-btn" onclick="editShift('${shiftDoc.id}')">✏️ Edit</button>
+          <button class="delete-btn" onclick="deleteShift('${shiftDoc.id}')">🗑️ Delete</button>
+        </td>
+      </tr>`;
+    shiftsTable.insertAdjacentHTML("beforeend", row);
   }
-}
 
-// 🔎 Arama filtresi
-searchShift?.addEventListener("input", () => {
-  const term = searchShift.value.toLowerCase();
-  document.querySelectorAll("#shiftsTable tbody tr").forEach((tr) => {
-    tr.style.display = tr.innerText.toLowerCase().includes(term) ? "" : "none";
-  });
-});
+  renderChart(counts);
+}
 
 // 👥 Kullanıcıları getir
 async function loadUsers() {
-  try {
-    usersTable.innerHTML = "";
-    const snap = await db.collection("users").get();
-    snap.forEach((doc) => {
-      const u = doc.data();
-      const row = `<tr><td>${u.email}</td><td>${u.role || "user"}</td><td>${u.uid}</td></tr>`;
-      usersTable.insertAdjacentHTML("beforeend", row);
-    });
-  } catch (err) {
-    console.error("❌ loadUsers failed:", err);
-    usersTable.innerHTML = `<tr><td colspan="3">Failed to load users.</td></tr>`;
-  }
+  const snap = await db.collection("users").get();
+  usersTable.innerHTML = "";
+  snap.forEach((doc) => {
+    const u = doc.data();
+    usersTable.insertAdjacentHTML(
+      "beforeend",
+      `<tr><td>${u.email}</td><td>${u.role || "user"}</td><td>${u.uid}</td></tr>`
+    );
+  });
 }
 
 // 📊 Chart.js
 function renderChart(counts) {
   const ctx = document.getElementById("shiftChart");
   if (!ctx) return;
-
   new Chart(ctx, {
     type: "pie",
     data: {
       labels: ["Morning", "Evening", "Night"],
-      datasets: [
-        {
-          data: [counts.Morning, counts.Evening, counts.Night],
-          backgroundColor: ["#198754", "#ffc107", "#0d6efd"],
-        },
-      ],
+      datasets: [{
+        data: [counts.Morning, counts.Evening, counts.Night],
+        backgroundColor: ["#198754", "#ffc107", "#0d6efd"]
+      }]
     },
-    options: { plugins: { legend: { position: "bottom" } } },
+    options: { plugins: { legend: { position: "bottom" } } }
   });
 }
 
-// ✏️ Edit / 🗑️ Delete (global)
+// 🪟 Edit Modal Elementleri
+const editModal = document.getElementById("editModal");
+const editDate = document.getElementById("edit-date");
+const editType = document.getElementById("edit-type");
+const editNote = document.getElementById("edit-note");
+const saveEditBtn = document.getElementById("saveEdit");
+const cancelEditBtn = document.getElementById("cancelEdit");
+
+let editingShiftId = null;
+
+// ✏️ Edit Shift - Modal aç
 window.editShift = async function (id) {
   try {
     const ref = db.collection("shifts").doc(id);
     const snap = await ref.get();
     if (!snap.exists) return alert("Shift not found!");
     const s = snap.data();
-    const newNote = prompt(`Edit note for ${s.date}:`, s.note || "");
-    if (newNote !== null) {
-      await ref.update({ note: newNote });
-      alert("✅ Shift updated!");
-      loadShifts();
-    }
+
+    editDate.value = s.date || "";
+    editType.value = s.type || "Morning";
+    editNote.value = s.note || "";
+
+    editingShiftId = id;
+    editModal.style.display = "flex";
   } catch (e) {
     console.error(e);
-    alert("❌ Update failed: " + e.message);
+    alert("❌ Could not load shift: " + e.message);
   }
 };
 
-window.deleteShift = async function (id) {
+// 💾 Kaydet
+saveEditBtn?.addEventListener("click", async () => {
+  if (!editingShiftId) return;
   try {
-    if (!confirm("Delete this shift?")) return;
-    await db.collection("shifts").doc(id).delete();
-    alert("🗑️ Shift deleted!");
+    await db.collection("shifts").doc(editingShiftId).update({
+      date: editDate.value,
+      type: editType.value,
+      note: editNote.value,
+    });
+    alert("✅ Shift updated successfully!");
+    editModal.style.display = "none";
+    editingShiftId = null;
     loadShifts();
   } catch (e) {
-    console.error(e);
-    alert("❌ Delete failed: " + e.message);
+    alert("❌ Update failed: " + e.message);
   }
+});
+
+// ❌ Cancel
+cancelEditBtn?.addEventListener("click", () => {
+  editModal.style.display = "none";
+  editingShiftId = null;
+});
+
+// 🗑️ Delete Shift
+window.deleteShift = async function (id) {
+  if (!confirm("Delete this shift?")) return;
+  await db.collection("shifts").doc(id).delete();
+  alert("🗑️ Shift deleted!");
+  loadShifts();
 };
 
 // 🚪 Logout
