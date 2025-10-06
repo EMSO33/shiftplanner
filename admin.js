@@ -155,3 +155,21 @@ window.deleteShift = async function (id) {
   alert("🗑️ Shift deleted!");
   loadShifts();
 };
+// 🔄 Sekme Geçiş Fonksiyonu (TAMİR EDİLMİŞ)
+document.querySelectorAll("nav button").forEach((btn) => {
+  btn.addEventListener("click", (e) => {
+    // Tüm butonlardan aktif class’ı kaldır
+    document.querySelectorAll("nav button").forEach((b) => b.classList.remove("active"));
+
+    // Tüm tab-content alanlarını gizle
+    document.querySelectorAll(".tab-content").forEach((c) => c.classList.remove("active"));
+
+    // Tıklanan butonu aktif yap
+    e.target.classList.add("active");
+
+    // Hangi içerik açılacaksa id’sini eşleştir
+    const tabId = e.target.id.replace("tab-", "content-");
+    const content = document.getElementById(tabId);
+    if (content) content.classList.add("active");
+  });
+});
