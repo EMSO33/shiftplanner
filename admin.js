@@ -126,11 +126,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // 📊 Chart
+  // 📊 Chart (Canvas hata düzeltildi)
+  let shiftChartInstance = null;
   function renderChart(counts) {
     const ctx = document.getElementById("shiftChart");
     if (!ctx) return;
-    new Chart(ctx, {
+
+    if (shiftChartInstance) {
+      shiftChartInstance.destroy();
+    }
+
+    shiftChartInstance = new Chart(ctx, {
       type: "pie",
       data: {
         labels: ["Morning", "Evening", "Night"],
