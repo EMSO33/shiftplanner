@@ -14,17 +14,19 @@ const db = firebase.firestore();
 
 // 📋 DOM
 const shiftsTable = document.querySelector("#shiftsTable tbody");
-const usersTable = document.querySelector("#usersTable tbody");
+const usersTable  = document.querySelector("#usersTable tbody");
 const searchShift = document.getElementById("searchShift");
 
-// 🔄 Sekme geçişi (güncel sistem)
-document.querySelectorAll(".tab-btn").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
+// 🔄 Sekme geçişi (HTML'deki id kalıbı: tab-*, content-*)
+document.querySelectorAll("nav button").forEach((btn) => {
+  btn.addEventListener("click", (e) => {
+    // aktif buton
+    document.querySelectorAll("nav button").forEach((b) => b.classList.remove("active"));
+    e.currentTarget.classList.add("active");
+    // içerikler
     document.querySelectorAll(".tab-content").forEach((c) => c.classList.remove("active"));
-    btn.classList.add("active");
-    const target = btn.getAttribute("data-target");
-    document.querySelector(target).classList.add("active");
+    const tabId = e.currentTarget.id.replace("tab-", "content-");
+    document.getElementById(tabId)?.classList.add("active");
   });
 });
 
@@ -35,83 +37,113 @@ auth.onAuthStateChanged(async (user) => {
     return;
   }
 
-  const userRef = db.collection("users").doc(user.uid);
-  const userDoc = await userRef.get();
+  try {
+    const userRef  = db.collection("users").doc(user.uid);
+    const userSnap = await userRef.get();
 
-  if (!userDoc.exists) {
-    alert("⚠️ User record not found in database!");
-    await auth.signOut();
-    window.location.href = "index.html";
-    return;
-  }
-
-  const userData = userDoc.data();
-
-  if (userData.role !== "admin") {
-    alert("⛔ Access denied. Only admins can view this page!");
-    await auth.signOut();
-    window.location.href = "index.html";
-    return;
-  }
-
-  console.log("✅ Admin verified:", user.email);
-  loadShifts();
-  loadUsers();
-});
-
-
-// 🧾 Shift verilerini getir (userEmail eksikse users koleksiyonundan bul)
-async function loadShifts() {
-  const snap = await db.collection("shifts").get();
-  shiftsTable.innerHTML = "";
-  let counts = { Morning: 0, Evening: 0, Night: 0 };
-
-  for (const doc of snap.docs) {
-    const d = doc.data();
-    counts[d.type] = (counts[d.type] || 0) + 1;
-
-    let email = d.userEmail || "N/A";
-    if (!d.userEmail && d.uid) {
-      try {
-        const userSnap = await db.collection("users").where("uid", "==", d.uid).get();
-        if (!userSnap.empty) {
-          email = userSnap.docs[0].data().email;
-        }
-      } catch (e) {
-        console.warn("⚠️ User lookup failed:", e);
-      }
+    if (!userSnap.exists) {
+      alert("⚠️ User record not found in database!");
+      await auth.signOut();
+      window.location.href = "index.html";
+      return;
     }
 
-    const row = `
-  <tr>
-    <td>${email}</td>
-    <td>${d.date}</td>
-    <td>${d.type}</td>
-    <td>${d.note || "-"}</td>
-    <td>
-      <button class="edit-btn" onclick="editShift('${shiftDoc.id}')">✏️ Edit</button>
-      <button class="delete-btn" onclick="deleteShift('${shiftDoc.id}')">🗑️ Delete</button>
-    </td>
-  </tr>`;
+    const userData = userSnap.data();
+    if (userData.role !== "admin") {
+      alert("⛔ Access denied. Only admins can view this page!");
+      await auth.signOut();
+      window.location.href = "index.html";
+      return;
+    }
 
-    shiftsTable.insertAdjacentHTML("beforeend", row);
+    // Admin ok → verileri yükle
+    await loadShifts();
+    await loadUsers();
+  } catch (err) {
+    console.error("❌ Role check failed:", err);
+    alert("Error verifying role: " + err.message);
+    window.location.href = "index.html";
   }
+});
 
-  renderChart(counts);
+// 🧩 UID'den email bul (users koleksiyonunda field: uid/email)
+async function emailFromUid(uid) {
+  if (!uid) return "N/A";
+  try {
+    const q = await db.collection("users").where("uid", "==", uid).limit(1).get();
+    if (q.empty) return "N/A";
+    return q.docs[0].data().email || "N/A";
+  } catch (e) {
+    console.warn("⚠️ emailFromUid lookup failed:", e);
+    return "N/A";
+  }
 }
+
+// 🧾 Shift verilerini getir (userEmail yoksa users'tan tamamla)
+async function loadShifts() {
+  try {
+    // Tarihe göre sırala (YYYY-MM-DD string old. için leksikografik sıralama çalışır)
+    const snap = await db.collection("shifts").orderBy("date").get();
+    shiftsTable.innerHTML = "";
+
+    let counts = { Morning: 0, Evening: 0, Night: 0 };
+
+    for (const shiftDoc of snap.docs) {
+      const d = shiftDoc.data();
+      counts[d.type] = (counts[d.type] || 0) + 1;
+
+      // email'i tamamla
+      let email = d.userEmail || "N/A";
+      if (email === "N/A") {
+        email = await emailFromUid(d.uid);
+      }
+
+      const row = `
+        <tr>
+          <td>${email}</td>
+          <td>${d.date}</td>
+          <td>${d.type}</td>
+          <td>${d.note || "-"}</td>
+          <td>
+            <button class="edit-btn" onclick="editShift('${shiftDoc.id}')">✏️ Edit</button>
+            <button class="delete-btn" onclick="deleteShift('${shiftDoc.id}')">🗑️ Delete</button>
+          </td>
+        </tr>`;
+      shiftsTable.insertAdjacentHTML("beforeend", row);
+    }
+
+    renderChart(counts);
+  } catch (err) {
+    console.error("❌ loadShifts failed:", err);
+    shiftsTable.innerHTML = `<tr><td colspan="5">Failed to load shifts.</td></tr>`;
+  }
+}
+
+// 🔎 Arama filtresi
+searchShift?.addEventListener("input", () => {
+  const term = searchShift.value.toLowerCase();
+  document.querySelectorAll("#shiftsTable tbody tr").forEach((tr) => {
+    tr.style.display = tr.innerText.toLowerCase().includes(term) ? "" : "none";
+  });
+});
 
 // 👥 Kullanıcıları getir
 async function loadUsers() {
-  usersTable.innerHTML = "";
-  const snap = await db.collection("users").get();
-  snap.forEach((doc) => {
-    const u = doc.data();
-    const row = `<tr><td>${u.email}</td><td>${u.role || "user"}</td><td>${u.uid}</td></tr>`;
-    usersTable.insertAdjacentHTML("beforeend", row);
-  });
+  try {
+    usersTable.innerHTML = "";
+    const snap = await db.collection("users").get();
+    snap.forEach((doc) => {
+      const u = doc.data();
+      const row = `<tr><td>${u.email}</td><td>${u.role || "user"}</td><td>${u.uid}</td></tr>`;
+      usersTable.insertAdjacentHTML("beforeend", row);
+    });
+  } catch (err) {
+    console.error("❌ loadUsers failed:", err);
+    usersTable.innerHTML = `<tr><td colspan="3">Failed to load users.</td></tr>`;
+  }
 }
 
-// 📊 Chart.js grafik
+// 📊 Chart.js
 function renderChart(counts) {
   const ctx = document.getElementById("shiftChart");
   if (!ctx) return;
@@ -131,45 +163,39 @@ function renderChart(counts) {
   });
 }
 
-// 🚪 Logout
-document.getElementById("logout-btn").addEventListener("click", async () => {
-  await auth.signOut();
-  window.location.href = "login.html";
-});
+// ✏️ Edit / 🗑️ Delete (global)
 window.editShift = async function (id) {
-  const shiftRef = db.collection("shifts").doc(id);
-  const shiftDoc = await shiftRef.get();
-  if (!shiftDoc.exists) return alert("Shift not found!");
-  const shift = shiftDoc.data();
-  const newNote = prompt(`Edit note for ${shift.date}:`, shift.note || "");
-  if (newNote !== null) {
-    await shiftRef.update({ note: newNote });
-    alert("✅ Shift updated!");
-    loadShifts();
+  try {
+    const ref = db.collection("shifts").doc(id);
+    const snap = await ref.get();
+    if (!snap.exists) return alert("Shift not found!");
+    const s = snap.data();
+    const newNote = prompt(`Edit note for ${s.date}:`, s.note || "");
+    if (newNote !== null) {
+      await ref.update({ note: newNote });
+      alert("✅ Shift updated!");
+      loadShifts();
+    }
+  } catch (e) {
+    console.error(e);
+    alert("❌ Update failed: " + e.message);
   }
 };
 
 window.deleteShift = async function (id) {
-  if (!confirm("Delete this shift?")) return;
-  await db.collection("shifts").doc(id).delete();
-  alert("🗑️ Shift deleted!");
-  loadShifts();
+  try {
+    if (!confirm("Delete this shift?")) return;
+    await db.collection("shifts").doc(id).delete();
+    alert("🗑️ Shift deleted!");
+    loadShifts();
+  } catch (e) {
+    console.error(e);
+    alert("❌ Delete failed: " + e.message);
+  }
 };
-// 🔄 Sekme Geçiş Fonksiyonu (TAMİR EDİLMİŞ)
-document.querySelectorAll("nav button").forEach((btn) => {
-  btn.addEventListener("click", (e) => {
-    // Tüm butonlardan aktif class’ı kaldır
-    document.querySelectorAll("nav button").forEach((b) => b.classList.remove("active"));
 
-    // Tüm tab-content alanlarını gizle
-    document.querySelectorAll(".tab-content").forEach((c) => c.classList.remove("active"));
-
-    // Tıklanan butonu aktif yap
-    e.target.classList.add("active");
-
-    // Hangi içerik açılacaksa id’sini eşleştir
-    const tabId = e.target.id.replace("tab-", "content-");
-    const content = document.getElementById(tabId);
-    if (content) content.classList.add("active");
-  });
+// 🚪 Logout
+document.getElementById("logout-btn")?.addEventListener("click", async () => {
+  await auth.signOut();
+  window.location.href = "login.html";
 });
