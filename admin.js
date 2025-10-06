@@ -20,9 +20,7 @@ const searchShift = document.getElementById("searchShift");
 // 🔄 Sekme geçişi
 document.querySelectorAll("nav button").forEach((btn) => {
   btn.addEventListener("click", () => {
-    document
-      .querySelectorAll(".tab-content")
-      .forEach((c) => c.classList.remove("active"));
+    document.querySelectorAll(".tab-content").forEach((c) => c.classList.remove("active"));
     const id = btn.id.replace("tab-", "content-");
     document.getElementById(id).classList.add("active");
   });
@@ -65,7 +63,7 @@ auth.onAuthStateChanged(async (user) => {
   }
 });
 
-// 🧾 Shift verilerini getir
+// 🧾 Shift verilerini getir + düzenleme/silme butonlarıyla
 async function loadShifts() {
   const snap = await db.collection("shifts").get();
   shiftsTable.innerHTML = "";
@@ -75,14 +73,47 @@ async function loadShifts() {
     const d = doc.data();
     counts[d.type] = (counts[d.type] || 0) + 1;
 
-    const row = `
-      <tr>
-        <td>${d.userEmail || "N/A"}</td>
-        <td>${d.date}</td>
-        <td>${d.type}</td>
-        <td>${d.note || "-"}</td>
-      </tr>`;
-    shiftsTable.insertAdjacentHTML("beforeend", row);
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${d.userEmail || "N/A"}</td>
+      <td>${d.date}</td>
+      <td>${d.type}</td>
+      <td>${d.note || "-"}</td>
+      <td>
+        <button class="edit-btn">✏️ Edit</button>
+        <button class="delete-btn">🗑️ Delete</button>
+      </td>
+    `;
+
+    // ✏️ Edit butonu
+    row.querySelector(".edit-btn").addEventListener("click", async () => {
+      const newNote = prompt("Enter new note:", d.note || "");
+      if (newNote === null) return; // iptal edildiyse
+      try {
+        await db.collection("shifts").doc(doc.id).update({ note: newNote });
+        alert("✅ Shift updated!");
+        loadShifts();
+      } catch (err) {
+        console.error(err);
+        alert("❌ Error updating shift: " + err.message);
+      }
+    });
+
+    // 🗑️ Delete butonu
+    row.querySelector(".delete-btn").addEventListener("click", async () => {
+      if (confirm("Are you sure you want to delete this shift?")) {
+        try {
+          await db.collection("shifts").doc(doc.id).delete();
+          alert("🗑️ Shift deleted!");
+          loadShifts();
+        } catch (err) {
+          console.error(err);
+          alert("❌ Error deleting shift: " + err.message);
+        }
+      }
+    });
+
+    shiftsTable.appendChild(row);
   });
 
   renderChart(counts);
@@ -94,7 +125,11 @@ async function loadUsers() {
   const snap = await db.collection("users").get();
   snap.forEach((doc) => {
     const u = doc.data();
-    const row = `<tr><td>${u.email}</td><td>${u.role || "user"}</td><td>${u.uid}</td></tr>`;
+    const row = `<tr>
+      <td>${u.email}</td>
+      <td>${u.role || "user"}</td>
+      <td>${u.uid}</td>
+    </tr>`;
     usersTable.insertAdjacentHTML("beforeend", row);
   });
 }
