@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", async () => {
-
   // 🔥 Firebase
   const firebaseConfig = {
     apiKey: "AIzaSyARlOXg2YuKrEsRWARCUTiabHoMN1hO3Ks",
@@ -12,14 +11,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   };
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
-  const db = firebase.firestore();
+  const db   = firebase.firestore();
 
   // 📋 DOM
   const shiftsTable = document.querySelector("#shiftsTable tbody");
   const usersTable  = document.querySelector("#usersTable tbody");
   const searchShift = document.getElementById("searchShift");
 
-  // 🔄 Sekme geçişi
+  // 🔄 Tabs
   document.querySelectorAll(".tab-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
@@ -27,6 +26,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       btn.classList.add("active");
       const target = btn.getAttribute("data-target");
       document.querySelector(target)?.classList.add("active");
+
+      // Stats tab açıldıysa grafiği şimdi çiz
+      if (target === "#content-stats") {
+        renderChart(latestCounts);
+      }
     });
   });
 
@@ -62,7 +66,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // 🧩 UID → email (fallback ile)
+  // 🧩 UID → email (fallback’lı)
   async function emailFromUid(uid) {
     if (!uid) return "N/A";
     try {
@@ -74,16 +78,20 @@ document.addEventListener("DOMContentLoaded", async () => {
     return "N/A";
   }
 
+  // 🔢 Grafiğe veri: son değerleri tut
+  let latestCounts = { Morning: 0, Evening: 0, Night: 0 };
+
   // 🧾 Shifts
   async function loadShifts() {
     const snap = await db.collection("shifts").orderBy("date").get();
     shiftsTable.innerHTML = "";
 
-    let counts = { Morning: 0, Evening: 0, Night: 0 };
+    // sayım sıfırla
+    latestCounts = { Morning: 0, Evening: 0, Night: 0 };
 
     for (const shiftDoc of snap.docs) {
       const d = shiftDoc.data();
-      counts[d.type] = (counts[d.type] || 0) + 1;
+      latestCounts[d.type] = (latestCounts[d.type] || 0) + 1;
 
       let email = d.userEmail || "N/A";
       if (email === "N/A") email = await emailFromUid(d.uid);
@@ -102,7 +110,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       shiftsTable.insertAdjacentHTML("beforeend", row);
     }
 
-    renderChart(counts);
+    // Sadece Statistics tab açıksa çiz
+    const statsOpen = document.querySelector("#content-stats")?.classList.contains("active");
+    if (statsOpen) renderChart(latestCounts);
   }
 
   // 🔎 Arama
@@ -126,22 +136,27 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // 📊 Chart (Canvas hata düzeltildi)
+  // 📊 Chart — tekrar çizmeden önce daima destroy
   let shiftChartInstance = null;
-  function renderChart(counts) {
-    const ctx = document.getElementById("shiftChart");
-    if (!ctx) return;
+  function renderChart(counts = { Morning: 0, Evening: 0, Night: 0 }) {
+    const canvas = document.getElementById("shiftChart");
+    if (!canvas) return;
 
-    if (shiftChartInstance) {
-      shiftChartInstance.destroy();
+    try {
+      // varsa önceki grafiği yok et
+      const existing = (Chart.getChart && (Chart.getChart(canvas) || Chart.getChart("shiftChart"))) || shiftChartInstance;
+      if (existing) existing.destroy();
+    } catch (e) {
+      // sessizce geç
     }
 
+    const ctx = canvas.getContext("2d");
     shiftChartInstance = new Chart(ctx, {
       type: "pie",
       data: {
         labels: ["Morning", "Evening", "Night"],
         datasets: [{
-          data: [counts.Morning, counts.Evening, counts.Night],
+          data: [counts.Morning || 0, counts.Evening || 0, counts.Night || 0],
           backgroundColor: ["#198754", "#ffc107", "#0d6efd"]
         }]
       },
@@ -149,7 +164,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // 🪟 Modal Elementleri
+  // 🪟 Modal
   const editModal     = document.getElementById("editModal");
   const editDate      = document.getElementById("edit-date");
   const editType      = document.getElementById("edit-type");
@@ -159,7 +174,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   let editingShiftId = null;
 
-  // ✏️ Edit Modal aç
+  // ✏️ Edit (global)
   window.editShift = async function (id) {
     try {
       const ref = db.collection("shifts").doc(id);
@@ -167,12 +182,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (!snap.exists) return alert("Shift not found!");
       const s = snap.data();
 
-      editDate.value = s.date || "";
-      editType.value = s.type || "Morning";
-      editNote.value = s.note || "";
+      // formu doldur
+      if (editDate) editDate.value = s.date || "";
+      if (editType) editType.value = s.type || "Morning";
+      if (editNote) editNote.value = s.note || "";
 
       editingShiftId = id;
-      editModal.style.display = "flex";
+      if (editModal) editModal.style.display = "flex";
     } catch (e) {
       console.error(e);
       alert("❌ Could not load shift: " + e.message);
@@ -188,7 +204,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         type: editType.value,
         note: editNote.value,
       });
-      editModal.style.display = "none";
+      if (editModal) editModal.style.display = "none";
       editingShiftId = null;
       await loadShifts();
       alert("✅ Shift updated!");
@@ -197,9 +213,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // ❌ Cancel + backdrop close
+  // ❌ Cancel + backdrop
   cancelEditBtn?.addEventListener("click", () => {
-    editModal.style.display = "none";
+    if (editModal) editModal.style.display = "none";
     editingShiftId = null;
   });
   editModal?.addEventListener("click", (e) => {
@@ -209,7 +225,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // 🗑️ Delete
+  // 🗑️ Delete (global)
   window.deleteShift = async function (id) {
     if (!confirm("Delete this shift?")) return;
     await db.collection("shifts").doc(id).delete();
@@ -222,5 +238,4 @@ document.addEventListener("DOMContentLoaded", async () => {
     await auth.signOut();
     window.location.href = "login.html";
   });
-
-}); // ✅ DOMContentLoaded sonu
+});
