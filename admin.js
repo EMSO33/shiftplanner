@@ -26,44 +26,25 @@ document.querySelectorAll("nav button").forEach((btn) => {
   });
 });
 
-// 🔑 Auth kontrolü (role tabanlı)
+// 🔑 Auth kontrolü
 auth.onAuthStateChanged(async (user) => {
-  console.clear();
   if (!user) {
-    alert("⚠️ No user signed in, redirecting...");
     window.location.href = "login.html";
     return;
   }
 
-  try {
-    // Firestore'da kullanıcı rolünü al
-    const userDoc = await db.collection("users").doc(user.uid).get();
+  const userDoc = await db.collection("users").doc(user.uid).get();
+  const data = userDoc.data();
 
-    if (!userDoc.exists) {
-      alert("❌ User record not found in Firestore!");
-      await auth.signOut();
-      window.location.href = "login.html";
-      return;
-    }
-
-    const userData = userDoc.data();
-    console.log("👤 Logged in as:", userData.email, "| Role:", userData.role);
-
-    if (userData.role !== "admin") {
-      alert("⛔ Only admin users can access this page!");
-      await auth.signOut();
-      window.location.href = "index.html";
-      return;
-    }
-
-    console.log("✅ Admin verified! Loading data...");
-    loadShifts();
-    loadUsers();
-
-  } catch (err) {
-    console.error("❌ Error checking user role:", err);
-    alert("Error verifying role. Please try again.");
+  if (!data || data.role !== "admin") {
+    alert("⛔ Only admins can access this page!");
+    await auth.signOut();
+    window.location.href = "index.html";
+    return;
   }
+
+  loadShifts();
+  loadUsers();
 });
 
 // 🧾 Shift verileri
@@ -75,14 +56,54 @@ async function loadShifts() {
   snap.forEach((doc) => {
     const d = doc.data();
     counts[d.type] = (counts[d.type] || 0) + 1;
-    const row = `
-      <tr>
-        <td>${d.userEmail || "N/A"}</td>
-        <td>${d.date}</td>
-        <td>${d.type}</td>
-        <td>${d.note || "-"}</td>
-      </tr>`;
-    shiftsTable.insertAdjacentHTML("beforeend", row);
+
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${d.userEmail || "N/A"}</td>
+      <td>${d.date}</td>
+      <td>${d.type}</td>
+      <td>${d.note || "-"}</td>
+      <td>
+        <button class="edit-btn" data-id="${doc.id}">✏️ Edit</button>
+        <button class="delete-btn" data-id="${doc.id}">🗑️ Delete</button>
+      </td>
+    `;
+    shiftsTable.appendChild(row);
+  });
+
+  // Edit işlemi
+  document.querySelectorAll(".edit-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const id = btn.dataset.id;
+      const docRef = await db.collection("shifts").doc(id).get();
+      const data = docRef.data();
+
+      const newDate = prompt("📅 New Date (YYYY-MM-DD):", data.date);
+      const newType = prompt("🌙 New Type (Morning/Evening/Night):", data.type);
+      const newNote = prompt("📝 Note:", data.note || "");
+
+      if (newDate && newType) {
+        await db.collection("shifts").doc(id).update({
+          date: newDate,
+          type: newType,
+          note: newNote
+        });
+        alert("✅ Shift updated!");
+        loadShifts();
+      }
+    });
+  });
+
+  // Delete işlemi
+  document.querySelectorAll(".delete-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const id = btn.dataset.id;
+      if (confirm("🗑️ Are you sure you want to delete this shift?")) {
+        await db.collection("shifts").doc(id).delete();
+        alert("✅ Shift deleted!");
+        loadShifts();
+      }
+    });
   });
 
   renderChart(counts);
@@ -94,7 +115,7 @@ async function loadUsers() {
   const snap = await db.collection("users").get();
   snap.forEach((doc) => {
     const u = doc.data();
-    const row = `<tr><td>${u.email}</td><td>${u.role || "user"}</td><td>${u.uid}</td></tr>`;
+    const row = `<tr><td>${u.email}</td><td>${u.role || "user"}</td></tr>`;
     usersTable.insertAdjacentHTML("beforeend", row);
   });
 }
@@ -107,12 +128,14 @@ function renderChart(counts) {
     type: "pie",
     data: {
       labels: ["Morning", "Evening", "Night"],
-      datasets: [{
-        data: [counts.Morning, counts.Evening, counts.Night],
-        backgroundColor: ["#198754", "#ffc107", "#0d6efd"]
-      }]
+      datasets: [
+        {
+          data: [counts.Morning, counts.Evening, counts.Night],
+          backgroundColor: ["#198754", "#ffc107", "#0d6efd"],
+        },
+      ],
     },
-    options: { plugins: { legend: { position: "bottom" } } }
+    options: { plugins: { legend: { position: "bottom" } } },
   });
 }
 
