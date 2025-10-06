@@ -12,12 +12,13 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// 📥 Form referansı
-const form = document.getElementById("register-form");
+// 🧾 Form referansı
+const registerForm = document.getElementById("register-form");
 
-// 🧾 Yeni kullanıcı kaydı
-form.addEventListener("submit", async (e) => {
+// 📥 Kayıt işlemi
+registerForm.addEventListener("submit", async (e) => {
   e.preventDefault();
+
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value.trim();
 
@@ -31,7 +32,7 @@ form.addEventListener("submit", async (e) => {
     const userCredential = await auth.createUserWithEmailAndPassword(email, password);
     const user = userCredential.user;
 
-    // 🗂️ Firestore'a kullanıcı ekle
+    // 🧾 Firestore'a kullanıcı kaydı ekle
     await db.collection("users").doc(user.uid).set({
       uid: user.uid,
       email: user.email,
@@ -40,8 +41,9 @@ form.addEventListener("submit", async (e) => {
 
     alert("✅ Registration successful! Redirecting to login...");
     window.location.href = "login.html";
+
   } catch (error) {
-    console.error("❌ Error:", error);
-    alert("❌ " + error.message);
+    console.error("❌ Registration error:", error);
+    alert("❌ Error: " + error.message);
   }
 });
