@@ -363,3 +363,28 @@ body.index-page {
   height: 100vh !important;
   background-color: #f4f6f9 !important;
 }
+.edit-btn, .delete-btn {
+  margin-left: 10px;
+  padding: 4px 10px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  color: white;
+}
+
+.edit-btn {
+  background-color: #0d6efd;
+}
+
+.delete-btn {
+  background-color: #dc3545;
+}
+
+.edit-btn:hover {
+  background-color: #0b5ed7;
+}
+
+.delete-btn:hover {
+  background-color: #bb2d3b;
+}
