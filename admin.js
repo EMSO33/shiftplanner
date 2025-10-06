@@ -6,7 +6,7 @@ const firebaseConfig = {
   storageBucket: "shiftpilot-b3c1d.firebasestorage.app",
   messagingSenderId: "676810685497",
   appId: "1:676810685497:web:db3162bc7a394442caa1e8",
-  measurementId: "G-BEJ85FBSCZ"
+  measurementId: "G-BEJ85FBSCZ",
 };
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
@@ -21,9 +21,11 @@ const usersTable = document.querySelector("#usersTable tbody");
 const searchShift = document.getElementById("searchShift");
 
 // 🔄 Sekme Geçişi
-document.querySelectorAll("nav button").forEach(btn => {
+document.querySelectorAll("nav button").forEach((btn) => {
   btn.addEventListener("click", () => {
-    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+    document
+      .querySelectorAll(".tab-content")
+      .forEach((c) => c.classList.remove("active"));
     const id = btn.id.replace("tab-", "content-");
     document.getElementById(id).classList.add("active");
   });
@@ -31,12 +33,23 @@ document.querySelectorAll("nav button").forEach(btn => {
 
 // 🔑 Auth Kontrolü
 auth.onAuthStateChanged(async (user) => {
-  if (!user) return (window.location.href = "login.html");
-  if (user.email !== ADMIN_EMAIL) {
-    alert("⛔ Only admin can access this page!");
-    return (window.location.href = "index.html");
+  if (!user) {
+    window.location.href = "login.html";
+    return;
   }
 
+  // ✅ Null veya yanlış mail kontrolü — artık güvenli
+  const email = user.email ? user.email.toLowerCase() : "";
+  const adminEmail = ADMIN_EMAIL.toLowerCase();
+
+  if (email !== adminEmail) {
+    alert("⛔ Only admin can access this page!");
+    await auth.signOut();
+    window.location.href = "index.html";
+    return;
+  }
+
+  console.log("✅ Admin erişimi verildi:", email);
   loadShifts();
   loadUsers();
 });
@@ -59,7 +72,7 @@ async function loadShifts() {
           const userSnap = await db.collection("users").doc(d.uid).get();
           if (userSnap.exists) email = userSnap.data().email || "N/A";
         } catch (e) {
-          console.warn("User lookup failed:", e);
+          console.warn("⚠️ User lookup failed:", e);
         }
       }
 
@@ -82,7 +95,7 @@ async function loadShifts() {
 // 🔎 Arama Filtresi
 searchShift.addEventListener("input", () => {
   const term = searchShift.value.toLowerCase();
-  document.querySelectorAll("#shiftsTable tbody tr").forEach(tr => {
+  document.querySelectorAll("#shiftsTable tbody tr").forEach((tr) => {
     tr.style.display = tr.innerText.toLowerCase().includes(term) ? "" : "none";
   });
 });
@@ -115,14 +128,18 @@ function renderChart(counts) {
     type: "pie",
     data: {
       labels: ["Morning", "Evening", "Night"],
-      datasets: [{
-        data: [counts.Morning, counts.Evening, counts.Night],
-        backgroundColor: ["#198754", "#ffc107", "#0d6efd"]
-      }]
+      datasets: [
+        {
+          data: [counts.Morning, counts.Evening, counts.Night],
+          backgroundColor: ["#198754", "#ffc107", "#0d6efd"],
+        },
+      ],
     },
     options: {
-      plugins: { legend: { position: "bottom" } }
-    }
+      plugins: {
+        legend: { position: "bottom" },
+      },
+    },
   });
 }
 
