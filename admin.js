@@ -1,4 +1,4 @@
-// admin.js  (TAMAMI)
+// 🔥 Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyARlOXg2YuKrEsRWARCUTiabHoMN1hO3Ks",
   authDomain: "shiftpilot-b3c1d.firebaseapp.com",
@@ -10,49 +10,25 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
-const db   = firebase.firestore();
+const db = firebase.firestore();
 
-const shiftsTableBody = document.querySelector("#shiftsTable tbody");
-const usersTableBody  = document.querySelector("#usersTable tbody");
-const searchShift     = document.getElementById("searchShift");
+// 📋 DOM
+const shiftsTable = document.querySelector("#shiftsTable tbody");
+const usersTable = document.querySelector("#usersTable tbody");
+const searchShift = document.getElementById("searchShift");
 
-let USER_MAP = {}; // uid -> email map (users koleksiyonundan)
-let CURRENT_ADMIN = null;
-
-window.addEventListener("DOMContentLoaded", () => {
-  // Sekme tıklamaları
-  document.querySelectorAll(".tab-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-
-      document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
-      const target = document.querySelector(btn.dataset.target);
-      if (target) target.classList.add("active");
-    });
+// 🔄 Sekme geçişi (güncel sistem)
+document.querySelectorAll(".tab-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
+    document.querySelectorAll(".tab-content").forEach((c) => c.classList.remove("active"));
+    btn.classList.add("active");
+    const target = btn.getAttribute("data-target");
+    document.querySelector(target).classList.add("active");
   });
-
-  // Logout
-  const logoutBtn = document.getElementById("logout-btn");
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", async () => {
-      await auth.signOut();
-      window.location.href = "login.html";
-    });
-  }
-
-  // Arama
-  if (searchShift) {
-    searchShift.addEventListener("input", () => {
-      const term = searchShift.value.toLowerCase();
-      document.querySelectorAll("#shiftsTable tbody tr").forEach(tr => {
-        tr.style.display = tr.innerText.toLowerCase().includes(term) ? "" : "none";
-      });
-    });
-  }
 });
 
-// Auth + rol kontrolü
+// 🔑 Rol tabanlı Auth kontrolü
 auth.onAuthStateChanged(async (user) => {
   if (!user) {
     window.location.href = "login.html";
@@ -60,148 +36,104 @@ auth.onAuthStateChanged(async (user) => {
   }
 
   try {
-    // users koleksiyonunda bu kullanıcının rolünü bul
-    const uSnap = await db.collection("users").doc(user.uid).get();
-    if (!uSnap.exists) {
-      alert("⚠️ User record not found in Firestore.");
+    const userRef = db.collection("users").doc(user.uid);
+    const docSnap = await userRef.get();
+
+    if (!docSnap.exists) {
+      alert("⚠️ User record not found in database!");
       await auth.signOut();
       window.location.href = "index.html";
       return;
     }
-    const uData = uSnap.data();
-    if ((uData.role || "user") !== "admin") {
+
+    const userData = docSnap.data();
+
+    if (userData.role !== "admin") {
       alert("⛔ Access denied. Only admins can view this page!");
       await auth.signOut();
       window.location.href = "index.html";
       return;
     }
-    CURRENT_ADMIN = uData.email || user.email || "(admin)";
 
-    // Tüm kullanıcıları map’e al (uid -> email)
-    USER_MAP = await buildUserMap();
-
-    // Shiftler ve kullanıcılar yükle
-    await loadShifts();
-    await loadUsers();
-  } catch (err) {
-    console.error("Auth/role check failed:", err);
-    alert("Auth/role error: " + err.message);
+    console.log("✅ Admin verified:", userData.email);
+    loadShifts();
+    loadUsers();
+  } catch (error) {
+    console.error("❌ Role check failed:", error);
+    alert("Error verifying role: " + error.message);
     window.location.href = "index.html";
   }
 });
 
-// users koleksiyonundan uid->email map’i
-async function buildUserMap() {
-  const map = {};
-  const snap = await db.collection("users").get();
-  snap.forEach(doc => {
-    const d = doc.data();
-    if (d && d.uid && d.email) map[d.uid] = d.email;
-  });
-  return map;
-}
-
-// Shift verilerini getir + email’i eşleştir + eksikse kalıcı yaz
+// 🧾 Shift verilerini getir (userEmail eksikse users koleksiyonundan bul)
 async function loadShifts() {
   const snap = await db.collection("shifts").get();
-  shiftsTableBody.innerHTML = "";
-  const counts = { Morning: 0, Evening: 0, Night: 0 };
+  shiftsTable.innerHTML = "";
+  let counts = { Morning: 0, Evening: 0, Night: 0 };
 
-  for (const docSnap of snap.docs) {
-    const d = docSnap.data();
-    if (d?.type) counts[d.type] = (counts[d.type] || 0) + 1;
+  for (const doc of snap.docs) {
+    const d = doc.data();
+    counts[d.type] = (counts[d.type] || 0) + 1;
 
-    let email = d.userEmail || USER_MAP[d.uid] || "N/A";
-
-    // Eğer userEmail alanı eksik ama USER_MAP’te email bulunuyorsa, belgeye yaz
-    if (!d.userEmail && email !== "N/A") {
+    let email = d.userEmail || "N/A";
+    if (!d.userEmail && d.uid) {
       try {
-        await db.collection("shifts").doc(docSnap.id).update({ userEmail: email });
+        const userSnap = await db.collection("users").where("uid", "==", d.uid).get();
+        if (!userSnap.empty) {
+          email = userSnap.docs[0].data().email;
+        }
       } catch (e) {
-        console.warn("Failed to backfill userEmail for", docSnap.id, e);
+        console.warn("⚠️ User lookup failed:", e);
       }
     }
 
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${email}</td>
-      <td>${d.date || "-"}</td>
-      <td>${d.type || "-"}</td>
-      <td>${d.note || "-"}</td>
-      <td>
-        <button class="edit-btn" data-id="${docSnap.id}">✏️ Edit</button>
-        <button class="delete-btn" data-id="${docSnap.id}">🗑️ Delete</button>
-      </td>
-    `;
-    shiftsTableBody.appendChild(tr);
+    const row = `
+      <tr>
+        <td>${email}</td>
+        <td>${d.date}</td>
+        <td>${d.type}</td>
+        <td>${d.note || "-"}</td>
+        <td>✏️ Edit 🗑️ Delete</td>
+      </tr>`;
+    shiftsTable.insertAdjacentHTML("beforeend", row);
   }
-
-  // Satır içi Edit/Delete (event delegation)
-  shiftsTableBody.addEventListener("click", async (e) => {
-    const btn = e.target.closest("button");
-    if (!btn) return;
-    const id = btn.getAttribute("data-id");
-    if (!id) return;
-
-    if (btn.classList.contains("delete-btn")) {
-      if (!confirm("Delete this shift?")) return;
-      await db.collection("shifts").doc(id).delete();
-      await loadShifts();
-      return;
-    }
-
-    if (btn.classList.contains("edit-btn")) {
-      const docRef = db.collection("shifts").doc(id);
-      const cur = await docRef.get();
-      if (!cur.exists) return;
-      const data = cur.data();
-
-      const newDate = prompt("Date (YYYY-MM-DD):", data.date || "");
-      if (newDate === null) return;
-      const newType = prompt("Type (Morning/Evening/Night):", data.type || "");
-      if (newType === null) return;
-      const newNote = prompt("Note:", data.note || "");
-      if (newNote === null) return;
-
-      await docRef.update({ date: newDate, type: newType, note: newNote });
-      await loadShifts();
-      return;
-    }
-  }, { once: true }); // yeniden render’da yeniden bağlanacak
 
   renderChart(counts);
 }
 
-// Kullanıcılar tablosu
+// 👥 Kullanıcıları getir
 async function loadUsers() {
-  usersTableBody.innerHTML = "";
+  usersTable.innerHTML = "";
   const snap = await db.collection("users").get();
-  snap.forEach(doc => {
+  snap.forEach((doc) => {
     const u = doc.data();
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${u.email}</td>
-      <td>${u.role || "user"}</td>
-      <td>${u.uid}</td>
-    `;
-    usersTableBody.appendChild(tr);
+    const row = `<tr><td>${u.email}</td><td>${u.role || "user"}</td><td>${u.uid}</td></tr>`;
+    usersTable.insertAdjacentHTML("beforeend", row);
   });
 }
 
-// İstatistik grafiği
+// 📊 Chart.js grafik
 function renderChart(counts) {
   const ctx = document.getElementById("shiftChart");
   if (!ctx) return;
-  // eslint-disable-next-line no-undef
+
   new Chart(ctx, {
     type: "pie",
     data: {
       labels: ["Morning", "Evening", "Night"],
-      datasets: [{
-        data: [counts.Morning || 0, counts.Evening || 0, counts.Night || 0],
-        backgroundColor: ["#198754", "#ffc107", "#0d6efd"],
-      }],
+      datasets: [
+        {
+          data: [counts.Morning, counts.Evening, counts.Night],
+          backgroundColor: ["#198754", "#ffc107", "#0d6efd"],
+        },
+      ],
     },
     options: { plugins: { legend: { position: "bottom" } } },
   });
 }
+
+// 🚪 Logout
+document.getElementById("logout-btn").addEventListener("click", async () => {
+  await auth.signOut();
+  window.location.href = "login.html";
+});
