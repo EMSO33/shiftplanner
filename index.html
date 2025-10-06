@@ -2,145 +2,115 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>ShiftPilot Dashboard</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css">
   <style>
     body {
       background-color: #f4f6f9;
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
+      margin: 0;
+      font-family: Arial, sans-serif;
     }
 
     .dashboard {
       background: #fff;
       padding: 2rem;
       border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
       width: 360px;
       text-align: center;
     }
 
-    h1 {
-      color: #333;
+    .dashboard h1 {
       margin-bottom: 1rem;
+      color: #333;
     }
 
     #welcome-text {
-      color: #666;
+      color: #555;
       margin-bottom: 1.5rem;
     }
 
-    /* 🔹 Butonları eşit aralıkla hizala */
     .button-group {
-      display: grid;
-      grid-template-columns: 1fr;
-      row-gap: 10px; /* 🔥 Tüm butonlar arasında eşit aralık */
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
       margin-top: 10px;
     }
 
     .button-group button {
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      padding: 12px;
+      padding: 0.8rem 1rem;
       font-size: 1rem;
-      font-weight: 500;
+      border: none;
+      border-radius: 6px;
       cursor: pointer;
-      transition: background-color 0.3s, transform 0.1s;
+      transition: background-color 0.3s, transform 0.1s ease-in;
+      color: white;
       width: 100%;
-      box-sizing: border-box;
     }
 
     .button-group button:hover {
       transform: scale(1.03);
     }
 
-    /* 🔸 Renk temaları */
-    #planner-btn {
-      background-color: #0d6efd;
-    }
-    #planner-btn:hover {
-      background-color: #0b5ed7;
-    }
+    #planner-btn { background-color: #198754; }
+    #planner-btn:hover { background-color: #157347; }
 
-    #calendar-btn {
-      background-color: #20c997;
-    }
-    #calendar-btn:hover {
-      background-color: #198754;
-    }
+    #calendar-btn { background-color: #0d6efd; }
+    #calendar-btn:hover { background-color: #0b5ed7; }
 
-    #stats-btn {
-      background-color: #ffc107;
-      color: #000;
-    }
-    #stats-btn:hover {
-      background-color: #e0a800;
-      color: #000;
-    }
+    #stats-btn { background-color: #fd7e14; }
+    #stats-btn:hover { background-color: #e76f00; }
 
-    #logout-btn {
-      background-color: #dc3545;
-    }
-    #logout-btn:hover {
-      background-color: #bb2d3b;
-    }
+    #logout-btn { background-color: #e63946; }
+    #logout-btn:hover { background-color: #c1121f; }
+
   </style>
 </head>
 <body>
   <div class="dashboard">
-    <h1>ShiftPilot Dashboard</h1>
-    <p id="welcome-text">Loading user info...</p>
+    <h1>Welcome to ShiftPilot</h1>
+    <p id="welcome-text">Manage your shifts with ease.</p>
 
     <div class="button-group">
-      <button id="planner-btn">🗓️ Go to Shift Planner</button>
-      <button id="calendar-btn">📅 View Calendar</button>
-      <button id="stats-btn">📊 View Stats</button>
+      <button id="planner-btn">📋 Go to Shift Planner</button>
+      <button id="calendar-btn">📅 Calendar</button>
+      <button id="stats-btn">📊 Shift Statistics</button>
       <button id="logout-btn">🚪 Logout</button>
     </div>
   </div>
 
-  <script type="module" src="firebase.js"></script>
-  <script type="module">
-    import { auth } from "./firebase.js";
-    import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyARlOXg2YuKrEsRWARCUTiabHoMN1hO3Ks",
+      authDomain: "shiftpilot-b3c1d.firebaseapp.com",
+      projectId: "shiftpilot-b3c1d",
+      storageBucket: "shiftpilot-b3c1d.firebasestorage.app",
+      messagingSenderId: "676810685497",
+      appId: "1:676810685497:web:db3162bc7a394442caa1e8",
+      measurementId: "G-BEJ85FBSCZ"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
 
-    const welcomeText = document.getElementById("welcome-text");
-    const logoutBtn = document.getElementById("logout-btn");
-    const plannerBtn = document.getElementById("planner-btn");
-    const calendarBtn = document.getElementById("calendar-btn");
-    const statsBtn = document.getElementById("stats-btn");
-
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        welcomeText.textContent = `Welcome, ${user.email} 👋`;
-      } else {
-        window.location.replace("login.html");
-      }
-    });
-
-    logoutBtn.addEventListener("click", async () => {
-      await signOut(auth);
-      alert("👋 Logged out successfully!");
-      window.location.replace("login.html");
-    });
-
-    plannerBtn.addEventListener("click", () => {
+    document.getElementById("planner-btn").addEventListener("click", () => {
       window.location.href = "shift.html";
     });
-
-    calendarBtn.addEventListener("click", () => {
+    document.getElementById("calendar-btn").addEventListener("click", () => {
       window.location.href = "shift-calendar.html";
     });
-
-    statsBtn.addEventListener("click", () => {
+    document.getElementById("stats-btn").addEventListener("click", () => {
       window.location.href = "shift-stats.html";
+    });
+    document.getElementById("logout-btn").addEventListener("click", async () => {
+      await auth.signOut();
+      window.location.href = "login.html";
     });
   </script>
 </body>
