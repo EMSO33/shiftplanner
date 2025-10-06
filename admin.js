@@ -63,19 +63,39 @@ auth.onAuthStateChanged(async (user) => {
   }
 });
 
-// 🧾 Shift verilerini getir + düzenleme/silme butonlarıyla
+// 🧾 Shift verilerini getir (eksik mailleri otomatik doldurur)
 async function loadShifts() {
   const snap = await db.collection("shifts").get();
   shiftsTable.innerHTML = "";
   let counts = { Morning: 0, Evening: 0, Night: 0 };
 
-  snap.forEach((doc) => {
+  for (const doc of snap.docs) {
     const d = doc.data();
     counts[d.type] = (counts[d.type] || 0) + 1;
 
+    // 🔍 userEmail eksikse uid üzerinden bul
+    let email = d.userEmail;
+    if (!email && d.uid) {
+      try {
+        const userSnap = await db.collection("users").doc(d.uid).get();
+        if (userSnap.exists) {
+          const userData = userSnap.data();
+          email = userData.email || "N/A";
+
+          // 🔄 Eksikse Firestore’a kaydet (gelecekte tekrar eksik olmasın)
+          await db.collection("shifts").doc(doc.id).update({ userEmail: email });
+        } else {
+          email = "N/A";
+        }
+      } catch (e) {
+        console.warn("⚠️ userEmail lookup failed:", e);
+        email = "N/A";
+      }
+    }
+
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td>${d.userEmail || "N/A"}</td>
+      <td>${email || "N/A"}</td>
       <td>${d.date}</td>
       <td>${d.type}</td>
       <td>${d.note || "-"}</td>
@@ -85,10 +105,10 @@ async function loadShifts() {
       </td>
     `;
 
-    // ✏️ Edit butonu
+    // ✏️ Edit
     row.querySelector(".edit-btn").addEventListener("click", async () => {
       const newNote = prompt("Enter new note:", d.note || "");
-      if (newNote === null) return; // iptal edildiyse
+      if (newNote === null) return;
       try {
         await db.collection("shifts").doc(doc.id).update({ note: newNote });
         alert("✅ Shift updated!");
@@ -99,7 +119,7 @@ async function loadShifts() {
       }
     });
 
-    // 🗑️ Delete butonu
+    // 🗑️ Delete
     row.querySelector(".delete-btn").addEventListener("click", async () => {
       if (confirm("Are you sure you want to delete this shift?")) {
         try {
@@ -114,7 +134,7 @@ async function loadShifts() {
     });
 
     shiftsTable.appendChild(row);
-  });
+  }
 
   renderChart(counts);
 }
@@ -150,11 +170,7 @@ function renderChart(counts) {
         },
       ],
     },
-    options: {
-      plugins: {
-        legend: { position: "bottom" },
-      },
-    },
+    options: { plugins: { legend: { position: "bottom" } } },
   });
 }
 
