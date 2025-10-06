@@ -25,26 +25,43 @@ auth.onAuthStateChanged(async (user) => {
   }
 
   try {
-    const userDoc = await db.collection("users").doc(user.uid).get();
-    if (!userDoc.exists || userDoc.data().role !== "admin") {
+    console.log("🧩 Logged user UID:", user.uid);
+
+    // 🔍 Kullanıcıyı Firestore'dan getir
+    const q = await db.collection("users").where("uid", "==", user.uid).get();
+
+    if (q.empty) {
+      alert("⚠️ User record not found in Firestore!");
+      await auth.signOut();
+      window.location.href = "index.html";
+      return;
+    }
+
+    const userData = q.docs[0].data();
+    console.log("✅ Firestore user:", userData);
+
+    // 🛡️ Rol kontrolü
+    if (userData.role?.toLowerCase() !== "admin") {
       alert("⛔ Access denied. Only admins can view this page!");
       await auth.signOut();
       window.location.href = "index.html";
       return;
     }
 
-    console.log("✅ Admin verified:", user.email);
+    console.log("👑 Admin verified:", userData.email);
     loadShifts();
     loadUsers();
   } catch (error) {
     console.error("❌ Role check failed:", error);
+    alert("Error verifying admin role: " + error.message);
+    window.location.href = "index.html";
   }
 });
 
 // 🧾 Shift verilerini getir
 async function loadShifts() {
-  shiftsTable.innerHTML = "";
   const snap = await db.collection("shifts").get();
+  shiftsTable.innerHTML = "";
   let counts = { Morning: 0, Evening: 0, Night: 0 };
 
   for (const docSnap of snap.docs) {
@@ -53,19 +70,20 @@ async function loadShifts() {
 
     let email = shift.userEmail || null;
 
-    // ✅ Eğer userEmail yoksa, UID'den bul ve Firestore'a kaydet
+    // ✅ Eğer userEmail yoksa, uid üzerinden email'i bul
     if (!email && shift.uid) {
       try {
-        const userRef = await db.collection("users").doc(shift.uid).get();
-        if (userRef.exists) {
-          email = userRef.data().email || "N/A";
-          // Firestore’a geri yaz (bir kereye mahsus düzeltme)
+        const userQ = await db.collection("users").where("uid", "==", shift.uid).get();
+        if (!userQ.empty) {
+          const userDoc = userQ.docs[0].data();
+          email = userDoc.email || "N/A";
+          // Firestore’a kaydet (kalıcı düzeltme)
           await db.collection("shifts").doc(docSnap.id).update({ userEmail: email });
         } else {
           email = "N/A";
         }
-      } catch (err) {
-        console.warn("⚠️ user lookup failed:", err);
+      } catch (e) {
+        console.warn("⚠️ user lookup failed:", e);
         email = "N/A";
       }
     }
