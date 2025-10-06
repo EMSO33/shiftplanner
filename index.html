@@ -5,7 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>ShiftPilot Dashboard</title>
   <link rel="stylesheet" href="styles.css">
+
   <style>
+    /* 🌐 Genel Sayfa Ortalaması */
     body {
       background-color: #f4f6f9;
       display: flex;
@@ -16,47 +18,56 @@
       font-family: Arial, sans-serif;
     }
 
+    /* 🖥️ Dashboard Kutusu */
     .dashboard {
       background: #fff;
-      padding: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+      padding: 2.5rem;
+      border-radius: 16px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
       width: 360px;
+      max-width: 90%;
       text-align: center;
+      animation: fadeIn 0.4s ease;
     }
 
     .dashboard h1 {
       margin-bottom: 1rem;
-      color: #333;
+      color: #222;
+      font-size: 1.6rem;
     }
 
     #welcome-text {
       color: #555;
-      margin-bottom: 1.5rem;
+      margin-bottom: 1.8rem;
+      font-size: 1rem;
     }
 
+    /* 🔘 Buton Grubu */
     .button-group {
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      margin-top: 10px;
+      gap: 14px;
     }
 
     .button-group button {
       padding: 0.8rem 1rem;
       font-size: 1rem;
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
       cursor: pointer;
-      transition: background-color 0.3s, transform 0.1s ease-in;
-      color: white;
+      transition: all 0.25s ease;
+      color: #fff;
       width: 100%;
+      font-weight: 600;
+      letter-spacing: 0.4px;
     }
 
     .button-group button:hover {
-      transform: scale(1.03);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
     }
 
+    /* 🎨 Renk Temaları */
     #planner-btn { background-color: #198754; }
     #planner-btn:hover { background-color: #157347; }
 
@@ -69,6 +80,22 @@
     #logout-btn { background-color: #e63946; }
     #logout-btn:hover { background-color: #c1121f; }
 
+    /* 🌀 Giriş Animasyonu */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.97); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    /* 📱 Mobil Düzeltme */
+    @media (max-width: 480px) {
+      .dashboard {
+        width: 90%;
+        padding: 2rem;
+      }
+      .button-group button {
+        font-size: 0.95rem;
+      }
+    }
   </style>
 </head>
 <body>
@@ -84,6 +111,7 @@
     </div>
   </div>
 
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script>
