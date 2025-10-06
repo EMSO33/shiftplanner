@@ -355,3 +355,11 @@ body {
   flex-direction: column;
   gap: 8px;
 }
+/* ✅ Sadece ana sayfa (index.html) için ortalama */
+body.index-page {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  height: 100vh !important;
+  background-color: #f4f6f9 !important;
+}
