@@ -1,4 +1,4 @@
-// 🔥 Firebase Config
+// 🔥 Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyARlOXg2YuKrEsRWARCUTiabHoMN1hO3Ks",
   authDomain: "shiftpilot-b3c1d.firebaseapp.com",
@@ -10,67 +10,66 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
-const db = firebase.firestore();
+const db   = firebase.firestore();
 
 // 📋 DOM
 const shiftsTable = document.querySelector("#shiftsTable tbody");
 const usersTable  = document.querySelector("#usersTable tbody");
 const searchShift = document.getElementById("searchShift");
 
-// 🔄 Sekme geçişi
-document.querySelectorAll("nav button").forEach((btn) => {
-  btn.addEventListener("click", (e) => {
-    document.querySelectorAll("nav button").forEach((b) => b.classList.remove("active"));
-    document.querySelectorAll(".tab-content").forEach((c) => c.classList.remove("active"));
-    e.currentTarget.classList.add("active");
-    const tabId = e.currentTarget.id.replace("tab-", "content-");
-    document.getElementById(tabId)?.classList.add("active");
+// 🔄 Tab geçişi (data-target kullanıyor)
+document.querySelectorAll(".tab-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+    btn.classList.add("active");
+    const target = btn.getAttribute("data-target");
+    document.querySelector(target)?.classList.add("active");
   });
 });
 
-// 🔑 Rol tabanlı Auth kontrolü
+// 🔑 Role-based access
 auth.onAuthStateChanged(async (user) => {
-  if (!user) return (window.location.href = "login.html");
-
+  if (!user) {
+    window.location.href = "login.html";
+    return;
+  }
   try {
-    const userRef  = db.collection("users").doc(user.uid);
-    const userSnap = await userRef.get();
-
+    const userSnap = await db.collection("users").doc(user.uid).get();
     if (!userSnap.exists) {
-      alert("⚠️ User record not found in database!");
+      alert("⚠️ User record not found!");
       await auth.signOut();
-      return (window.location.href = "index.html");
+      window.location.href = "index.html";
+      return;
     }
-
-    const userData = userSnap.data();
-    if (userData.role !== "admin") {
+    const data = userSnap.data();
+    if ((data.role || "user") !== "admin") {
       alert("⛔ Access denied. Only admins can view this page!");
       await auth.signOut();
-      return (window.location.href = "index.html");
+      window.location.href = "index.html";
+      return;
     }
-
     await loadShifts();
     await loadUsers();
-  } catch (err) {
-    console.error("❌ Role check failed:", err);
-    alert("Error verifying role: " + err.message);
+  } catch (e) {
+    console.error("Role check failed:", e);
     window.location.href = "index.html";
   }
 });
 
-// 🧩 UID'den email bul
+// 🧩 UID → email (doc(uid) ve where('uid') dene)
 async function emailFromUid(uid) {
   if (!uid) return "N/A";
   try {
+    const docSnap = await db.collection("users").doc(uid).get();
+    if (docSnap.exists) return docSnap.data().email || "N/A";
     const q = await db.collection("users").where("uid", "==", uid).limit(1).get();
-    if (q.empty) return "N/A";
-    return q.docs[0].data().email || "N/A";
-  } catch {
-    return "N/A";
-  }
+    if (!q.empty) return q.docs[0].data().email || "N/A";
+  } catch {}
+  return "N/A";
 }
 
-// 🧾 Shift verilerini getir
+// 🧾 Shifts
 async function loadShifts() {
   const snap = await db.collection("shifts").orderBy("date").get();
   shiftsTable.innerHTML = "";
@@ -101,10 +100,18 @@ async function loadShifts() {
   renderChart(counts);
 }
 
-// 👥 Kullanıcıları getir
+// 🔎 Arama
+searchShift?.addEventListener("input", () => {
+  const term = searchShift.value.toLowerCase();
+  document.querySelectorAll("#shiftsTable tbody tr").forEach((tr) => {
+    tr.style.display = tr.innerText.toLowerCase().includes(term) ? "" : "none";
+  });
+});
+
+// 👥 Users
 async function loadUsers() {
-  const snap = await db.collection("users").get();
   usersTable.innerHTML = "";
+  const snap = await db.collection("users").get();
   snap.forEach((doc) => {
     const u = doc.data();
     usersTable.insertAdjacentHTML(
@@ -114,7 +121,7 @@ async function loadUsers() {
   });
 }
 
-// 📊 Chart.js
+// 📊 Chart
 function renderChart(counts) {
   const ctx = document.getElementById("shiftChart");
   if (!ctx) return;
@@ -131,17 +138,17 @@ function renderChart(counts) {
   });
 }
 
-// 🪟 Edit Modal Elementleri
-const editModal = document.getElementById("editModal");
-const editDate = document.getElementById("edit-date");
-const editType = document.getElementById("edit-type");
-const editNote = document.getElementById("edit-note");
+// 🪟 Modal refs (artık admin.html modal yüklendikten sonra geliyor)
+const editModal   = document.getElementById("editModal");
+const editDate    = document.getElementById("edit-date");
+const editType    = document.getElementById("edit-type");
+const editNote    = document.getElementById("edit-note");
 const saveEditBtn = document.getElementById("saveEdit");
 const cancelEditBtn = document.getElementById("cancelEdit");
 
 let editingShiftId = null;
 
-// ✏️ Edit Shift - Modal aç
+// ✏️ Edit (modal aç)
 window.editShift = async function (id) {
   try {
     const ref = db.collection("shifts").doc(id);
@@ -161,7 +168,7 @@ window.editShift = async function (id) {
   }
 };
 
-// 💾 Kaydet
+// 💾 Save
 saveEditBtn?.addEventListener("click", async () => {
   if (!editingShiftId) return;
   try {
@@ -170,27 +177,33 @@ saveEditBtn?.addEventListener("click", async () => {
       type: editType.value,
       note: editNote.value,
     });
-    alert("✅ Shift updated successfully!");
     editModal.style.display = "none";
     editingShiftId = null;
-    loadShifts();
+    await loadShifts();
+    alert("✅ Shift updated!");
   } catch (e) {
     alert("❌ Update failed: " + e.message);
   }
 });
 
-// ❌ Cancel
+// ❌ Cancel + backdrop close
 cancelEditBtn?.addEventListener("click", () => {
   editModal.style.display = "none";
   editingShiftId = null;
 });
+editModal?.addEventListener("click", (e) => {
+  if (e.target === editModal) {
+    editModal.style.display = "none";
+    editingShiftId = null;
+  }
+});
 
-// 🗑️ Delete Shift
+// 🗑️ Delete
 window.deleteShift = async function (id) {
   if (!confirm("Delete this shift?")) return;
   await db.collection("shifts").doc(id).delete();
+  await loadShifts();
   alert("🗑️ Shift deleted!");
-  loadShifts();
 };
 
 // 🚪 Logout
