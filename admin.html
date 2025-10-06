@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ShiftPilot Admin Panel</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      background-color: #f4f6f9;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    .admin-container {
+      max-width: 1100px;
+      margin: 40px auto;
+      background: #fff;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    nav {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    nav button {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      color: white;
+      background-color: #0d6efd;
+      font-weight: 600;
+      transition: background-color 0.3s, transform 0.1s ease-in;
+    }
+
+    nav button:hover {
+      background-color: #0b5ed7;
+      transform: scale(1.03);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+    }
+
+    th {
+      background-color: #0d6efd;
+      color: white;
+    }
+
+    tr:hover {
+      background-color: #f1f1f1;
+    }
+
+    .search-bar {
+      margin-bottom: 15px;
+      text-align: right;
+    }
+
+    .search-bar input {
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      width: 250px;
+    }
+
+    .logout-btn {
+      background-color: #e63946;
+    }
+    .logout-btn:hover {
+      background-color: #c1121f;
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-container">
+    <h1>👨‍💼 ShiftPilot Admin Panel</h1>
+
+    <nav>
+      <button id="tab-shifts">📋 All Shifts</button>
+      <button id="tab-users">👥 Users</button>
+      <button id="tab-stats">📊 Statistics</button>
+      <button id="logout-btn" class="logout-btn">🚪 Logout</button>
+    </nav>
+
+    <!-- 🧾 All Shifts -->
+    <div id="content-shifts" class="tab-content active">
+      <div class="search-bar">
+        <input type="text" id="searchShift" placeholder="Search by user or date...">
+      </div>
+      <table id="shiftsTable">
+        <thead>
+          <tr>
+            <th>User Email</th>
+            <th>Date</th>
+            <th>Type</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <!-- 👥 Users -->
+    <div id="content-users" class="tab-content">
+      <table id="usersTable">
+        <thead>
+          <tr>
+            <th>Email</th>
+            <th>UID</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <!-- 📊 Stats -->
+    <div id="content-stats" class="tab-content">
+      <canvas id="shiftChart" width="400" height="200"></canvas>
+    </div>
+  </div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
