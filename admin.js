@@ -12,9 +12,6 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// 🔐 Admin Email
-const ADMIN_EMAIL = "deneme@shiftpilot.com";
-
 // 📋 DOM
 const shiftsTable = document.querySelector("#shiftsTable tbody");
 const usersTable = document.querySelector("#usersTable tbody");
@@ -29,31 +26,44 @@ document.querySelectorAll("nav button").forEach((btn) => {
   });
 });
 
-// 🔑 Auth kontrolü
+// 🔑 Auth kontrolü (role tabanlı)
 auth.onAuthStateChanged(async (user) => {
   console.clear();
-  console.log("👤 Firebase Auth result:", user);
-
   if (!user) {
     alert("⚠️ No user signed in, redirecting...");
     window.location.href = "login.html";
     return;
   }
 
-  const userEmail = (user.email || "").toLowerCase();
-  console.log("🔍 Logged in as:", userEmail);
-  console.log("🔑 Admin allowed:", ADMIN_EMAIL.toLowerCase());
+  try {
+    // Firestore'da kullanıcı rolünü al
+    const userDoc = await db.collection("users").doc(user.uid).get();
 
-  if (userEmail !== ADMIN_EMAIL.toLowerCase()) {
-    alert("⛔ Only admin can access this page!");
-    await auth.signOut();
-    window.location.href = "index.html";
-    return;
+    if (!userDoc.exists) {
+      alert("❌ User record not found in Firestore!");
+      await auth.signOut();
+      window.location.href = "login.html";
+      return;
+    }
+
+    const userData = userDoc.data();
+    console.log("👤 Logged in as:", userData.email, "| Role:", userData.role);
+
+    if (userData.role !== "admin") {
+      alert("⛔ Only admin users can access this page!");
+      await auth.signOut();
+      window.location.href = "index.html";
+      return;
+    }
+
+    console.log("✅ Admin verified! Loading data...");
+    loadShifts();
+    loadUsers();
+
+  } catch (err) {
+    console.error("❌ Error checking user role:", err);
+    alert("Error verifying role. Please try again.");
   }
-
-  console.log("✅ Admin verified! Loading data...");
-  loadShifts();
-  loadUsers();
 });
 
 // 🧾 Shift verileri
@@ -84,7 +94,7 @@ async function loadUsers() {
   const snap = await db.collection("users").get();
   snap.forEach((doc) => {
     const u = doc.data();
-    const row = `<tr><td>${u.email}</td><td>${u.uid}</td></tr>`;
+    const row = `<tr><td>${u.email}</td><td>${u.role || "user"}</td><td>${u.uid}</td></tr>`;
     usersTable.insertAdjacentHTML("beforeend", row);
   });
 }
