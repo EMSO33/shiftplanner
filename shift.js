@@ -51,6 +51,7 @@ addShiftBtn.addEventListener("click", async () => {
         date: shiftDate.value,
         type: shiftType.value,
         note: shiftNote.value || "",
+        userEmail: currentUser.email || "unknown@user.com" // ✅ güvenli ekleme
       });
       alert("✅ Shift updated!");
       editShiftId = null;
@@ -59,7 +60,7 @@ addShiftBtn.addEventListener("click", async () => {
       // 🆕 Yeni kayıt (kullanıcı email’i dahil)
       await addDoc(collection(db, "shifts"), {
         uid: currentUser.uid,
-        userEmail: currentUser.email, // ✅ Artık Firestore’a eklenecek
+        userEmail: currentUser.email || "unknown@user.com", // ✅ Her zaman email kaydedilir
         date: shiftDate.value,
         type: shiftType.value,
         note: shiftNote.value || "",
