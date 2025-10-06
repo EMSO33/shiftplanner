@@ -1,47 +1,28 @@
-// 🔥 Firebase Config
-const firebaseConfig = {
-  apiKey: "AIzaSyARlOXg2YuKrEsRWARCUTiabHoMN1hO3Ks",
-  authDomain: "shiftpilot-b3c1d.firebaseapp.com",
-  projectId: "shiftpilot-b3c1d",
-  storageBucket: "shiftpilot-b3c1d.firebasestorage.app",
-  messagingSenderId: "676810685497",
-  appId: "1:676810685497:web:db3162bc7a394442caa1e8",
-  measurementId: "G-BEJ85FBSCZ"
-};
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ShiftPilot Register</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="auth-container">
+    <h2>Create an Account</h2>
+    <form id="register-form">
+      <input type="email" id="email" placeholder="Email" required />
+      <input type="password" id="password" placeholder="Password" required />
+      <button type="submit">Register</button>
+    </form>
+    <p>Already have an account? <a href="login.html">Login</a></p>
+  </div>
 
-// 📥 Form referansı
-const form = document.getElementById("register-form");
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
-// 🧾 Yeni kullanıcı kaydı
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value.trim();
-
-  if (!email || !password) {
-    alert("⚠️ Please fill in all fields.");
-    return;
-  }
-
-  try {
-    // 🔐 Firebase Authentication ile kullanıcı oluştur
-    const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-    const user = userCredential.user;
-
-    // 🗂️ Firestore'a kullanıcı ekle
-    await db.collection("users").doc(user.uid).set({
-      uid: user.uid,
-      email: user.email,
-      createdAt: new Date().toISOString()
-    });
-
-    alert("✅ Registration successful! Redirecting to login...");
-    window.location.href = "login.html";
-  } catch (error) {
-    console.error("❌ Error:", error);
-    alert("❌ " + error.message);
-  }
-});
+  <!-- External script -->
+  <script src="register.js"></script>
+</body>
+</html>
